@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	cloud.google.com/go/secretmanager v1.5.0
+	github.com/aws/aws-lambda-go v1.34.1
 	github.com/google/go-github/v45 v45.2.0
 	go.uber.org/zap v1.22.0
 )
