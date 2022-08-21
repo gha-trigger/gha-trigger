@@ -18,9 +18,15 @@ var (
 )
 
 func main() {
+	if err := core(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func core() error {
 	logCfg := zap.NewProductionConfig()
 	logger, _ := logCfg.Build()
-	defer logger.Sync()
+	defer logger.Sync() //nolint:errcheck
 	logger = logger.With(
 		zap.String("program", "gha-dispatcher-lambda"),
 		zap.String("program_version", version),
@@ -28,19 +34,14 @@ func main() {
 		zap.String("program_built_date", date),
 	)
 	logger.Info("start the program")
-	if err := core(logger); err != nil {
-		logger.Fatal("gha-dispatcher failed", zap.Error(err))
-	}
-}
-
-func core(logger *zap.Logger) error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	handler, err := lmb.New()
 	if err != nil {
+		logger.Error("initialize a handler", zap.Error(err))
 		return err
 	}
 	logger.Debug("start handler")
-	lambda.StartWithContext(ctx, handler.Do)
+	lambda.StartWithOptions(handler.Do, lambda.WithContext(ctx))
 	return nil
 }

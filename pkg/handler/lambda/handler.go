@@ -57,7 +57,7 @@ type ResponseHeaders struct {
 func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error) {
 	logger := handler.logger
 	if err := github.ValidateSignature(event.Headers.Signature, []byte(event.Body), []byte(handler.secret.WebhookSecret)); err != nil {
-		logger.Debug("validate the webhook signature", zap.Error(err))
+		logger.Warn("validate the webhook signature", zap.Error(err))
 		return &Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
@@ -68,6 +68,7 @@ func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error)
 
 	body, err := github.ParseWebHook(event.Headers.Event, []byte(event.Body))
 	if err != nil {
+		logger.Warn("parse a webhook payload", zap.Error(err))
 		return &Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{

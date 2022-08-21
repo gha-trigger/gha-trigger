@@ -35,7 +35,7 @@ func initWithError(ctx context.Context) error {
 	handler = &Handler{}
 	secretClient, err := secretmanager.NewClient(ctx)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 	defer secretClient.Close()
 	return nil
