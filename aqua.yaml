@@ -1,0 +1,8 @@
+# aqua - CLI Version Manager
+# https://github.com/aquaproj/aqua
+registries:
+  - type: standard
+    ref: v3.34.0 # renovate: depName=aquaproj/aqua-registry
+packages:
+  - import: aqua/*.yaml
+  - name: suzuki-shunsuke/cmdx@v1.6.1

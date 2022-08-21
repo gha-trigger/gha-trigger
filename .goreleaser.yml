@@ -1,0 +1,22 @@
+project_name: gha-dispatcher
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: ./cmd/gha-dispatcher
+    binary: gha-dispatcher
+    env:
+      - CGO_ENABLED=0
+    goos:
+    - linux
+    goarch:
+    - amd64
+    - arm64
+archives:
+  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+release:
+  prerelease: true # we update release note manually before releasing
+  header: |
+    [Pull Requests](https://github.com/suzuki-shunsuke/gha-dispatcher/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/suzuki-shunsuke/gha-dispatcher/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/suzuki-shunsuke/gha-dispatcher/compare/{{.PreviousTag}}...{{.Tag}}
