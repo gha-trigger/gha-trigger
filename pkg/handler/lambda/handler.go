@@ -114,7 +114,15 @@ func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error)
 	for i := 0; i < numWorkflows; i++ {
 		workflow := workflows[i]
 		// Run GitHub Actions Workflow
-		_, err := handler.actions.CreateWorkflowDispatchEventByFileName(ctx, workflow.RepoOwner, workflow.RepoName, workflow.WorkflowFileName, github.CreateWorkflowDispatchEventRequest{})
+		inputs := make(map[string]interface{}, len(workflow.Inputs))
+		for k, v := range workflow.Inputs {
+			inputs[k] = v
+			inputs["payload"] = body
+		}
+		_, err := handler.actions.CreateWorkflowDispatchEventByFileName(ctx, workflow.RepoOwner, workflow.RepoName, workflow.WorkflowFileName, github.CreateWorkflowDispatchEventRequest{
+			Ref:    workflow.Ref,
+			Inputs: inputs,
+		})
 		if err != nil {
 			logger.Error(
 				"create a workflow dispatch event by file name",

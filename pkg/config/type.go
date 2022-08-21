@@ -15,6 +15,7 @@ events:
   - repo_owner: suzuki-shunsuke
     repo_name: tfcmt-ci
     workflow_file_name: test.yaml
+    ref: main
     inputs:
       event: foo
 */
@@ -55,7 +56,8 @@ type WorkflowConfig struct {
 	RepoOwner        string
 	RepoName         string
 	WorkflowFileName string `yaml:"workflow_file_name"`
-	Inputs           map[string]string
+	Ref              string
+	Inputs           map[string]interface{}
 }
 
 func compileStringsByRegexp(arr []string) []*regexp.Regexp {
