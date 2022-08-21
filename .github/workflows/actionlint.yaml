@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - .github/**
+      - aqua/actionlint.yaml
   pull_request:
     branches: [main]
     paths:
       - .github/**
+      - aqua/actionlint.yaml
 jobs:
   default:
     runs-on: ubuntu-latest
