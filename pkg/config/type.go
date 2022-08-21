@@ -5,36 +5,35 @@ import "regexp"
 /*
 e.g.
 
-repos:
-- event_repo: suzuki-shunsuke/tfcmt
-  workflow_repo: suzuki-shunsuke/tfcmt-ci
+events:
+- matches:
+  - repo_owner: suzuki-shunsuke
+    repo_name: suzuki-shunsuke
+    events: ["pull_request"]
+    branches: ["main"]
   workflows:
-    - name: test
-      repo: suzuki-shunsuke/tfcmt-ci
-      conditions:
-      - events: ["pull_request"]
-        branches: ["main"]
+  - repo_owner: suzuki-shunsuke
+    repo_name: tfcmt-ci
+    workflow_file_name: test.yaml
+    inputs:
+      event: foo
 */
 
 // Repos -> Workflows -> Conditions
 type Config struct {
-	Repos []*RepoConfig
+	Events []*EventConfig
 }
 
-type RepoConfig struct {
-	Name      string
-	Workflows []*WorkflowConfig
-	Repo      string
-}
-
-type WorkflowConfig struct {
-	FileName string `yaml:"file_name"`
+type EventConfig struct {
 	// OR Condition
-	Conditions []*WorkflowCondition
+	Matches   []*MatchConfig
+	Workflows []*WorkflowConfig
 }
 
-type WorkflowCondition struct {
+type MatchConfig struct {
 	// And Condition
+	RepoOwner              string
+	RepoName               string
 	Events                 []*Event
 	Branches               []string
 	Tags                   []string
@@ -52,6 +51,13 @@ type WorkflowCondition struct {
 	CompiledIf             string           `yaml:"-"`
 }
 
+type WorkflowConfig struct {
+	RepoOwner        string
+	RepoName         string
+	WorkflowFileName string `yaml:"workflow_file_name"`
+	Inputs           map[string]string
+}
+
 func compileStringsByRegexp(arr []string) []*regexp.Regexp {
 	ret := make([]*regexp.Regexp, 0, len(arr))
 	for _, s := range arr {
@@ -64,13 +70,13 @@ func compileStringsByRegexp(arr []string) []*regexp.Regexp {
 	return ret
 }
 
-func (wfc *WorkflowCondition) Compile() error {
-	wfc.CompiledBranches = compileStringsByRegexp(wfc.Branches)
-	wfc.CompiledTags = compileStringsByRegexp(wfc.Tags)
-	wfc.CompiledPaths = compileStringsByRegexp(wfc.Paths)
-	wfc.CompiledBranchesIgnore = compileStringsByRegexp(wfc.BranchesIgnore)
-	wfc.CompiledTagsIgnore = compileStringsByRegexp(wfc.TagsIgnore)
-	wfc.CompiledPathsIgnore = compileStringsByRegexp(wfc.PathsIgnore)
+func (mc *MatchConfig) Compile() error {
+	mc.CompiledBranches = compileStringsByRegexp(mc.Branches)
+	mc.CompiledTags = compileStringsByRegexp(mc.Tags)
+	mc.CompiledPaths = compileStringsByRegexp(mc.Paths)
+	mc.CompiledBranchesIgnore = compileStringsByRegexp(mc.BranchesIgnore)
+	mc.CompiledTagsIgnore = compileStringsByRegexp(mc.TagsIgnore)
+	mc.CompiledPathsIgnore = compileStringsByRegexp(mc.PathsIgnore)
 	return nil
 }
 
