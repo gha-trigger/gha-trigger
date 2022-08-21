@@ -2,33 +2,51 @@ package lambda
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/config"
 	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/domain"
 	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/github"
+	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"go.uber.org/zap"
+	"gopkg.in/yaml.v2"
 )
 
 type Handler struct {
-	secret  *Secret
-	actions domain.ActionsService
-	// gh      domain.GitHub
+	secret *config.Secret
+	gh     domain.GitHub
 	cfg    *config.Config
 	logger *zap.Logger
+	osEnv  osenv.OSEnv
 }
 
-func New() (*Handler, error) {
+func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 	// read config
+	cfg := &config.Config{}
+	osEnv := osenv.New()
+	if err := yaml.Unmarshal([]byte(osEnv.Getenv("CONFIG")), cfg); err != nil {
+		return nil, fmt.Errorf("parse the configuration as YAML: %w", err)
+	}
 	// read env
 	// read secret
+	sess := session.Must(session.NewSession())
+	svc := secretsmanager.New(sess, aws.NewConfig().WithRegion(cfg.AWS.Region))
+	secret, err := readSecretFromSecretsManager(ctx, svc, cfg.AWS.SecretsManager)
+	if err != nil {
+		return nil, fmt.Errorf("read the secret value from AWS Secrets Manager: %w", err)
+	}
 	// initialize handler
-	return &Handler{}, nil
-}
-
-type Secret struct {
-	WebhookSecret string
+	return &Handler{
+		cfg:    cfg,
+		osEnv:  osEnv,
+		logger: logger,
+		secret: secret,
+	}, nil
 }
 
 type Event struct {
@@ -82,6 +100,23 @@ func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error)
 				"error": "failed to parse a webhook payload",
 			},
 		}, nil
+	}
+
+	paramNewApp := &github.ParamNewApp{
+		AppID:   handler.cfg.GitHubApp.AppID,
+		KeyFile: handler.secret.GitHubAppPrivateKey,
+	}
+	if hasInstallation, ok := body.(github.HasInstallation); ok {
+		paramNewApp.InstallationID = hasInstallation.GetInstallation().GetID()
+		if err := handler.setGitHub(paramNewApp); err != nil {
+			logger.Error("set a GitHub Client", zap.Error(err))
+			return &Response{
+				StatusCode: http.StatusInternalServerError,
+				Body: map[string]interface{}{
+					"error": "Internal Server Error",
+				},
+			}, nil
+		}
 	}
 
 	if issueCommentEvent, ok := body.(*github.IssueCommentEvent); ok {
@@ -140,7 +175,7 @@ func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error)
 			inputs[k] = v
 			inputs["payload"] = body
 		}
-		_, err := handler.actions.CreateWorkflowDispatchEventByFileName(ctx, workflow.RepoOwner, workflow.RepoName, workflow.WorkflowFileName, github.CreateWorkflowDispatchEventRequest{
+		_, err := handler.gh.RunWorkflow(ctx, workflow.RepoOwner, workflow.RepoName, workflow.WorkflowFileName, github.CreateWorkflowDispatchEventRequest{
 			Ref:    workflow.Ref,
 			Inputs: inputs,
 		})
@@ -155,4 +190,20 @@ func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error)
 		}
 	}
 	return nil, nil //nolint:nilnil
+}
+
+func (handler *Handler) setGitHub(param *github.ParamNewApp) error {
+	if handler.gh != nil {
+		return nil
+	}
+	return handler.refreshGitHub(param)
+}
+
+func (handler *Handler) refreshGitHub(param *github.ParamNewApp) error {
+	gh, err := github.NewApp(param)
+	if err != nil {
+		return err
+	}
+	handler.gh = gh
+	return nil
 }

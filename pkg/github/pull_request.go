@@ -19,7 +19,7 @@ type ParamsListPRFiles struct {
 }
 
 func (client *Client) GetPR(ctx context.Context, owner, repo string, number int) (*PullRequest, *Response, error) {
-	return client.PullRequests.Get(ctx, owner, repo, number)
+	return client.pr.Get(ctx, owner, repo, number)
 }
 
 func (client *Client) ListPRFiles(ctx context.Context, param *ParamsListPRFiles) ([]*CommitFile, *Response, error) {
@@ -34,7 +34,7 @@ func (client *Client) ListPRFiles(ctx context.Context, param *ParamsListPRFiles)
 			Page:    i,
 			PerPage: maxPerPage,
 		}
-		files, resp, err := client.PullRequests.ListFiles(ctx, param.Owner, param.Repo, param.Number, opts)
+		files, resp, err := client.pr.ListFiles(ctx, param.Owner, param.Repo, param.Number, opts)
 		if err != nil {
 			return nil, resp, err
 		}

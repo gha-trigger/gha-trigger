@@ -36,7 +36,7 @@ func core() error {
 	logger.Info("start the program")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	handler, err := lmb.New()
+	handler, err := lmb.New(ctx, logger)
 	if err != nil {
 		logger.Error("initialize a handler", zap.Error(err))
 		return err

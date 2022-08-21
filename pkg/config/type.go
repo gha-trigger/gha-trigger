@@ -22,7 +22,29 @@ events:
 
 // Repos -> Workflows -> Conditions
 type Config struct {
-	Events []*EventConfig
+	AWS       *AWS       `yaml:"aws"`
+	GitHubApp *GitHubApp `yaml:"github_app"`
+	Events    []*EventConfig
+}
+
+type GitHubApp struct {
+	AppID int64 `yaml:"app_id"`
+}
+
+type AWS struct {
+	Region         string
+	SecretsManager *SecretsManager
+}
+
+type SecretsManager struct {
+	Region    string
+	SecretID  string
+	VersionID string
+}
+
+type Secret struct {
+	WebhookSecret       string `json:"webhook_secret"`
+	GitHubAppPrivateKey string `json:"github_app_private_key"`
 }
 
 type EventConfig struct {
