@@ -3,6 +3,7 @@ package lambda
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/config"
 	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/domain"
@@ -60,7 +61,7 @@ type HasEventType interface {
 	GetAction() string
 }
 
-func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error) {
+func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error) { //nolint:cyclop
 	logger := handler.logger
 	if err := github.ValidateSignature(event.Headers.Signature, []byte(event.Body), []byte(handler.secret.WebhookSecret)); err != nil {
 		logger.Warn("validate the webhook signature", zap.Error(err))
@@ -81,6 +82,26 @@ func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error)
 				"error": "failed to parse a webhook payload",
 			},
 		}, nil
+	}
+
+	if issueCommentEvent, ok := body.(*github.IssueCommentEvent); ok {
+		cmt := issueCommentEvent.GetComment()
+		htmlURL := cmt.GetHTMLURL()
+		if !strings.Contains(htmlURL, "/issue/") {
+			cmtBody := cmt.GetBody()
+			if strings.HasPrefix(cmtBody, "/rerun-workflow") {
+				return handler.rerunWorkflows(ctx, event, cmtBody)
+			}
+			if strings.HasPrefix(cmtBody, "/rerun-failed-job") {
+				return handler.rerunFailedJobs(ctx, event, cmtBody)
+			}
+			if strings.HasPrefix(cmtBody, "/rerun-job") {
+				return handler.rerunJobs(ctx, event, cmtBody)
+			}
+			if strings.HasPrefix(cmtBody, "/cancel") {
+				return handler.cancelWorkflows(ctx, event, cmtBody)
+			}
+		}
 	}
 
 	repoEvent, ok := body.(RepoEvent)

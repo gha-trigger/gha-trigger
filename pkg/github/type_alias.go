@@ -11,6 +11,7 @@ type (
 	PullRequest                        = github.PullRequest
 	Repository                         = github.Repository
 	Response                           = github.Response
+	IssueCommentEvent                  = github.IssueCommentEvent
 )
 
 func ValidateSignature(signature string, payload, secretToken []byte) error {
