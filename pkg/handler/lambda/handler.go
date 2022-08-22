@@ -99,6 +99,10 @@ func (handler *Handler) Do(ctx context.Context, event *Event) (*Response, error)
 		}
 	}
 
+	return handler.do(ctx, logger, event, body)
+}
+
+func (handler *Handler) do(ctx context.Context, logger *zap.Logger, event *Event, body interface{}) (*Response, error) {
 	if resp, err := handler.handleSlashCommand(ctx, event, body); resp != nil {
 		return resp, err
 	}
