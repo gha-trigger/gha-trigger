@@ -5,6 +5,7 @@ import (
 )
 
 type ActionsService interface {
+	CancelWorkflowRunByID(ctx context.Context, owner, repo string, runID int64) (*Response, error)
 	CreateWorkflowDispatchEventByFileName(ctx context.Context, owner, repo, workflowFileName string, event CreateWorkflowDispatchEventRequest) (*Response, error)
 	RerunJobByID(ctx context.Context, owner, repo string, jobID int64) (*Response, error)
 	RerunFailedJobsByID(ctx context.Context, owner, repo string, runID int64) (*Response, error)
@@ -25,4 +26,8 @@ func (client *Client) RerunWorkflow(ctx context.Context, owner, repo string, run
 
 func (client *Client) RerunFailedJobs(ctx context.Context, owner, repo string, runID int64) (*Response, error) {
 	return client.action.RerunFailedJobsByID(ctx, owner, repo, runID)
+}
+
+func (client *Client) CancelWorkflow(ctx context.Context, owner, repo string, runID int64) (*Response, error) {
+	return client.action.CancelWorkflowRunByID(ctx, owner, repo, runID)
 }
