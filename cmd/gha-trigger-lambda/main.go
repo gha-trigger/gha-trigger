@@ -7,7 +7,7 @@ import (
 	"syscall"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	lmb "github.com/suzuki-shunsuke/gha-dispatcher/pkg/handler/lambda"
+	lmb "github.com/suzuki-shunsuke/gha-trigger/pkg/handler/lambda"
 	"go.uber.org/zap"
 )
 
@@ -28,7 +28,7 @@ func core() error {
 	logger, _ := logCfg.Build()
 	defer logger.Sync() //nolint:errcheck
 	logger = logger.With(
-		zap.String("program", "gha-dispatcher-lambda"),
+		zap.String("program", "gha-trigger-lambda"),
 		zap.String("program_version", version),
 		zap.String("program_sha", commit),
 		zap.String("program_built_date", date),

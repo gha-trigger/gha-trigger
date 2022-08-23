@@ -1,13 +1,13 @@
-project_name: gha-dispatcher
+project_name: gha-trigger
 env:
   - GO111MODULE=on
 before:
   hooks:
     - go mod tidy
 builds:
-  - id: gha-dispatcher-lambda
-    main: ./cmd/gha-dispatcher-lambda
-    binary: gha-dispatcher-lambda
+  - id: gha-trigger-lambda
+    main: ./cmd/gha-trigger-lambda
+    binary: gha-trigger-lambda
     env:
       - CGO_ENABLED=0
     goos:
@@ -16,11 +16,11 @@ builds:
       - amd64
       - arm64
 archives:
-  - name_template: gha-dispatcher-lambda_{{ .Os }}_{{ .Arch }}
+  - name_template: gha-trigger-lambda_{{ .Os }}_{{ .Arch }}
     format: zip
     builds:
-      - gha-dispatcher-lambda
+      - gha-trigger-lambda
 release:
   prerelease: true # we update release note manually before releasing
   header: |
-    [Pull Requests](https://github.com/suzuki-shunsuke/gha-dispatcher/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/suzuki-shunsuke/gha-dispatcher/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/suzuki-shunsuke/gha-dispatcher/compare/{{.PreviousTag}}...{{.Tag}}
+    [Pull Requests](https://github.com/suzuki-shunsuke/gha-trigger/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/suzuki-shunsuke/gha-trigger/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/suzuki-shunsuke/gha-trigger/compare/{{.PreviousTag}}...{{.Tag}}

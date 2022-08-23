@@ -1,6 +1,6 @@
 # Getting Started with Terraform
 
-In the Getting Started, you can set up gha-dispatcher and experience CI with gha-dispatcher.
+In the Getting Started, you can set up gha-trigger and experience CI with gha-trigger.
 
 ## Requirement
 
@@ -56,11 +56,11 @@ The minimum setting of GitHub App (2).
 ### Set up Terraform Configuration
 
 ```console
-$ git clone https://github.com/suzuki-shunsuke/gha-dispatcher
-$ cd gha-dispatcher/terraform
+$ git clone https://github.com/suzuki-shunsuke/gha-trigger
+$ cd gha-trigger/terraform
 ```
 
-[Download a zip file from Release page](https://github.com/suzuki-shunsuke/gha-dispatcher/releases) on this directory.
+[Download a zip file from Release page](https://github.com/suzuki-shunsuke/gha-trigger/releases) on this directory.
 
 Create `config.yaml`, `secret.yaml`, and `terraform.tfvars` from templates.
 

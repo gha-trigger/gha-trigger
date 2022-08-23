@@ -4,8 +4,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/config"
-	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/github"
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
 )
 
 type matchFunc func(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error)

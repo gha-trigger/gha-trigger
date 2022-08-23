@@ -3,8 +3,8 @@ package lambda
 import (
 	"context"
 
-	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/config"
-	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/github"
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 

@@ -1,4 +1,4 @@
-module github.com/suzuki-shunsuke/gha-dispatcher
+module github.com/suzuki-shunsuke/gha-trigger
 
 go 1.18
 

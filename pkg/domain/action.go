@@ -3,7 +3,7 @@ package domain
 import (
 	"context"
 
-	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/github"
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
 )
 
 type ActionsService interface {

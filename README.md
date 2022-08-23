@@ -1,4 +1,4 @@
-# gha-dispatcher
+# gha-trigger
 
 GitHub App for Secure GitHub Actions
 

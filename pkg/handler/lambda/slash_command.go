@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/suzuki-shunsuke/gha-dispatcher/pkg/github"
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 
