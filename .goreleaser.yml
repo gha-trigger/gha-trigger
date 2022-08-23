@@ -17,6 +17,7 @@ builds:
       - arm64
 archives:
   - name_template: gha-dispatcher-lambda_{{ .Os }}_{{ .Arch }}
+    format: zip
     builds:
       - gha-dispatcher-lambda
 release:
