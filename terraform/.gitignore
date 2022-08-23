@@ -1,0 +1,6 @@
+secret.yaml
+config.yaml
+terraform.tfvars
+.terraform
+terraform.tfstate
+*.backup

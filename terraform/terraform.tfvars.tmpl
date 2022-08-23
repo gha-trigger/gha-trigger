@@ -1,0 +1,8 @@
+# Copy this file to terraform.tfvars
+# $ cp terraform.tfvars.template terraform.tfvars
+
+region                     = "us-east-1"
+secretsmanager_secret_name = "test-gha-dispatcher"
+zip_path                   = "gha-dispatcher-lambda_linux_amd64.zip"
+function_name              = "test-gha-dispatcher"
+lambda_role_name           = "test-gha-dispatcher"
