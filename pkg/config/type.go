@@ -33,13 +33,13 @@ type GitHubApp struct {
 
 type AWS struct {
 	Region         string
-	SecretsManager *SecretsManager
+	SecretsManager *SecretsManager `yaml:"secretsmanager"`
 }
 
 type SecretsManager struct {
 	Region    string
-	SecretID  string
-	VersionID string
+	SecretID  string `yaml:"secret_id"`
+	VersionID string `yaml:"version_id"`
 }
 
 type Secret struct {
