@@ -1,0 +1,26 @@
+project_name: gha-trigger
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - id: gha-trigger-lambda
+    main: ./cmd/gha-trigger-lambda
+    binary: gha-trigger-lambda
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+archives:
+  - name_template: gha-trigger-lambda_{{ .Os }}_{{ .Arch }}
+    format: zip
+    builds:
+      - gha-trigger-lambda
+release:
+  prerelease: true # we update release note manually before releasing
+  header: |
+    [Pull Requests](https://github.com/suzuki-shunsuke/gha-trigger/pulls?q=is%3Apr+milestone%3A{{.Tag}}) | [Issues](https://github.com/suzuki-shunsuke/gha-trigger/issues?q=is%3Aissue+milestone%3A{{.Tag}}) | https://github.com/suzuki-shunsuke/gha-trigger/compare/{{.PreviousTag}}...{{.Tag}}
