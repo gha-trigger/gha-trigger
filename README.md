@@ -46,6 +46,10 @@ This prevents developers from modifying workflows and CI scripts and makes GitHu
 gha-trigger supports only AWS Lambda at the moment,
 but we're considering to support other platform such as Google Cloud Function too.
 
+## Stateless
+
+`gha-trigger` doesn't use any Databases such as RDB at the moment, which makes the management of `gha-trigger` easy.
+
 ## How to rerun and cancel CI
 
 Developers don't have the write permission of CI Repository, so they can't rerun and cancel workflows directly.
@@ -101,6 +105,58 @@ Coming soon.
 ## How to set up
 
 Coming soon.
+
+## Configuration
+
+`gha-trigger` supports only environment variables as source of configuration,
+but we are considering other sources such as S3, DynamoDB, AWS AppConfig, and so on.
+
+e.g.
+
+```yaml
+---
+aws:
+  region: us-east-1
+  secretsmanager:
+    region: us-east-1
+    secret_id: test-gha-trigger
+github_app:
+  app_id: 123456789
+events:
+  - matches:
+      - repo_owner: suzuki-shunsuke
+        repo_name: example-terraform-monorepo-2
+        events:
+          - pull_request
+        branches:
+          - main
+    workflows:
+      - repo_owner: suzuki-shunsuke
+        repo_name: example-terraform-monorepo-2-ci
+        workflow_file_name: test_pull_request.yaml
+        ref: pull_request
+  - matches:
+      - repo_owner: suzuki-shunsuke
+        repo_name: example-terraform-monorepo-2
+        events:
+          - push
+        branches:
+          - main
+    workflows:
+      - repo_owner: suzuki-shunsuke
+        repo_name: example-terraform-monorepo-2-ci
+        workflow_file_name: test.yaml
+        ref: main
+```
+
+### Secrets
+
+`gha-trigger` requires the following secrets.
+
+- webhook_secret: GitHub App's Webhook Secret
+- github_app_private_key: GitHub App's private key
+
+`gha-trigger` supports only AWS SecretsManager at the moment.
 
 ## LICENSE
 
