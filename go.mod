@@ -10,7 +10,7 @@ require (
 	github.com/google/go-github/v45 v45.2.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
 	go.uber.org/zap v1.23.0
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
