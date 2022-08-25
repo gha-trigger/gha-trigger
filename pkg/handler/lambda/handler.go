@@ -131,5 +131,5 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, event *Event
 		return resp, err
 	}
 
-	return handler.runWorkflows(ctx, logger, body, workflows)
+	return handler.runWorkflows(ctx, logger, body, repo, workflows)
 }

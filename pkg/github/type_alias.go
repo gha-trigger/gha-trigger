@@ -9,12 +9,18 @@ import (
 type (
 	CommitFile                         = github.CommitFile
 	CreateWorkflowDispatchEventRequest = github.CreateWorkflowDispatchEventRequest
+	Deployment                         = github.Deployment
+	Installation                       = github.Installation
+	IssueCommentEvent                  = github.IssueCommentEvent
 	ListOptions                        = github.ListOptions
 	PullRequest                        = github.PullRequest
+	PullRequestTargetEvent             = github.PullRequestTargetEvent
+	PullRequestEvent                   = github.PullRequestEvent
+	PushEvent                          = github.PushEvent
+	ReleaseEvent                       = github.ReleaseEvent
 	Repository                         = github.Repository
 	Response                           = github.Response
-	IssueCommentEvent                  = github.IssueCommentEvent
-	Installation                       = github.Installation
+	StatusEvent                        = github.StatusEvent
 	V3Client                           = github.Client
 )
 
