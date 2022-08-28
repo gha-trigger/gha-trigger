@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) handleSlashCommand(ctx context.Context, logger *zap.Logger, body interface{}) (*Response, error) {
+func (handler *Handler) handleSlashCommand(ctx context.Context, logger *zap.Logger, gh *github.Client, body interface{}) (*Response, error) {
 	issueCommentEvent, ok := body.(*github.IssueCommentEvent)
 	if !ok {
 		return nil, nil //nolint:nilnil
@@ -22,16 +22,16 @@ func (handler *Handler) handleSlashCommand(ctx context.Context, logger *zap.Logg
 	owner := repo.GetOwner().GetLogin()
 	repoName := repo.GetName()
 	if strings.HasPrefix(cmtBody, "/rerun-workflow") {
-		return handler.rerunWorkflows(ctx, logger, owner, repoName, cmtBody)
+		return handler.rerunWorkflows(ctx, logger, gh, owner, repoName, cmtBody)
 	}
 	if strings.HasPrefix(cmtBody, "/rerun-failed-job") {
-		return handler.rerunFailedJobs(ctx, logger, owner, repoName, cmtBody)
+		return handler.rerunFailedJobs(ctx, logger, gh, owner, repoName, cmtBody)
 	}
 	if strings.HasPrefix(cmtBody, "/rerun-job") {
-		return handler.rerunJobs(ctx, logger, owner, repoName, cmtBody)
+		return handler.rerunJobs(ctx, logger, gh, owner, repoName, cmtBody)
 	}
 	if strings.HasPrefix(cmtBody, "/cancel") {
-		return handler.cancelWorkflows(ctx, logger, owner, repoName, cmtBody)
+		return handler.cancelWorkflows(ctx, logger, gh, owner, repoName, cmtBody)
 	}
 	return nil, nil //nolint:nilnil
 }

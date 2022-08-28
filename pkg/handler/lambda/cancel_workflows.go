@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) cancelWorkflows(ctx context.Context, logger *zap.Logger, owner, repo, cmtBody string) (*Response, error) {
+func (handler *Handler) cancelWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*Response, error) {
 	// /cancel <workflow id> [<workflow id> ...]
 	words := strings.Split(strings.TrimSpace(cmtBody), " ")
 	if len(words) < 2 { //nolint:gomnd
@@ -35,7 +36,7 @@ func (handler *Handler) cancelWorkflows(ctx context.Context, logger *zap.Logger,
 			}
 			continue
 		}
-		if res, err := handler.gh.CancelWorkflow(ctx, owner, repo, runID); err != nil {
+		if res, err := gh.CancelWorkflow(ctx, owner, repo, runID); err != nil {
 			logger.Error("cancel a workflow", zap.Error(err), zap.Int("status_code", res.StatusCode))
 			resp = &Response{
 				StatusCode: http.StatusInternalServerError,

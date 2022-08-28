@@ -6,6 +6,11 @@ import (
 	"github.com/google/go-github/v45/github"
 )
 
+const (
+	SHA1SignatureHeader = github.SHA1SignatureHeader
+	EventTypeHeader     = github.EventTypeHeader
+)
+
 type (
 	CommitFile                         = github.CommitFile
 	CreateWorkflowDispatchEventRequest = github.CreateWorkflowDispatchEventRequest
