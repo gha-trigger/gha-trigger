@@ -4,7 +4,7 @@ resource "aws_secretsmanager_secret" "trigger_workflow" {
 
 resource "aws_secretsmanager_secret_version" "trigger_workflow" {
   secret_id     = aws_secretsmanager_secret.trigger_workflow.id
-  secret_string = yamlencode(data.local_file.secret_trigger_workflow.content)
+  secret_string = jsonencode(yamldecode(data.local_file.secret_trigger_workflow.content))
 }
 
 data "local_file" "secret_trigger_workflow" {
