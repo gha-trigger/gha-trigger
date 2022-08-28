@@ -33,3 +33,9 @@ tasks:
     description: go install
     usage: go install
     script: go install ./cmd/tfcmt
+  - name: build
+    script: |
+      GOOS=linux GOARCH=amd64 go build -o dist/bootstrap ./cmd/gha-trigger-lambda
+      cd dist
+      zip gha-trigger-lambda_linux_amd64.zip bootstrap
+      mv gha-trigger-lambda_linux_amd64.zip ../terraform

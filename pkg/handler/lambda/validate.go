@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayProxyRequest) (*GitHubApp, interface{}, *Response) {
-	appIDS, ok := event.Headers["X-GitHub-Hook-Installation-Target-ID"]
+func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayProxyRequest) (*GitHubApp, *Event, *Response) {
+	appIDS, ok := event.Headers["x-github-hook-installation-target-id"]
 	if !ok {
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
@@ -37,7 +37,7 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 		}
 	}
 
-	sig, ok := event.Headers[github.SHA1SignatureHeader]
+	sig, ok := event.Headers["x-hub-signature"]
 	if !ok {
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
@@ -57,12 +57,12 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 		}
 	}
 
-	evType, ok := event.Headers[github.EventTypeHeader]
+	evType, ok := event.Headers["x-github-event"]
 	if !ok {
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
-				"error": "header X-Hub-Event is required",
+				"error": "header x-github-event is required",
 			},
 		}
 	}
@@ -77,5 +77,8 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 			},
 		}
 	}
-	return ghApp, body, nil
+	return ghApp, &Event{
+		Body: body,
+		Type: evType,
+	}, nil
 }

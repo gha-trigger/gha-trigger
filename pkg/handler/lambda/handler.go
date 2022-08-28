@@ -112,10 +112,12 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 }
 
 type Event struct {
-	Body         string                         `json:"body"`
-	ChangedFiles []string                       `json:"-"`
-	Repo         *github.Repository             `json:"-"`
-	Event        *events.APIGatewayProxyRequest `json:"-"`
+	Body         interface{}
+	ChangedFiles []string
+	Repo         *github.Repository
+	Event        *events.APIGatewayProxyRequest
+	Type         string
+	Action       string
 }
 
 type Response struct {
@@ -138,22 +140,28 @@ type HasEventType interface {
 
 func (handler *Handler) Do(ctx context.Context, event *events.APIGatewayProxyRequest) (*Response, error) {
 	logger := handler.logger
-	ghApp, body, resp := handler.validate(logger, event)
+	ghApp, ev, resp := handler.validate(logger, event)
 
 	if resp != nil {
 		return resp, nil
 	}
 
-	return handler.do(ctx, logger, ghApp, body)
+	return handler.do(ctx, logger, ghApp, ev)
 }
 
-func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHubApp, body interface{}) (*Response, error) {
+type hasAction interface {
+	GetAction() string
+}
+
+func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHubApp, ev *Event) (*Response, error) {
+	body := ev.Body
 	if resp, err := handler.handleSlashCommand(ctx, logger, ghApp.Client, body); resp != nil {
 		return resp, err
 	}
 
 	repoEvent, ok := body.(RepoEvent)
 	if !ok {
+		logger.Info("event is ignored because a repository isn't found in the payload")
 		return &Response{
 			StatusCode: http.StatusOK,
 			Body: map[string]interface{}{
@@ -161,10 +169,14 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 			},
 		}, nil
 	}
+
 	repo := repoEvent.GetRepo()
-	ev := &Event{
-		Repo: repo,
+	ev.Repo = repo
+
+	if actionEvent, ok := body.(hasAction); ok {
+		ev.Action = actionEvent.GetAction()
 	}
+
 	repoOwner := repo.GetOwner()
 	logger = logger.With(
 		zap.String("event_repo_owner", repoOwner.GetLogin()),
@@ -173,7 +185,7 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 
 	// route and filter request
 	// list labels and changed files
-	workflows, resp, err := handler.match(body, ev)
+	workflows, resp, err := handler.match(ev)
 	if err != nil {
 		return resp, err
 	}

@@ -8,15 +8,15 @@ import (
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/domain"
 )
 
-type matchFunc func(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error)
+type matchFunc func(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error)
 
-func (handler *Handler) match(body interface{}, event *Event) ([]*config.WorkflowConfig, *Response, error) {
+func (handler *Handler) match(event *Event) ([]*config.WorkflowConfig, *Response, error) {
 	cfg := handler.cfg
 	numEvents := len(cfg.Events)
 	var wfs []*config.WorkflowConfig
 	for i := 0; i < numEvents; i++ {
 		ev := cfg.Events[i]
-		f, resp, err := handler.matchEvent(ev, body, event)
+		f, resp, err := handler.matchEvent(ev, event)
 		if err != nil {
 			return nil, resp, err
 		}
@@ -27,12 +27,12 @@ func (handler *Handler) match(body interface{}, event *Event) ([]*config.Workflo
 	return wfs, nil, nil
 }
 
-func (handler *Handler) matchEvent(ev *config.EventConfig, payload interface{}, event *Event) (bool, *Response, error) {
+func (handler *Handler) matchEvent(ev *config.EventConfig, event *Event) (bool, *Response, error) {
 	if len(ev.Matches) == 0 {
 		return true, nil, nil
 	}
 	for _, matchConfig := range ev.Matches {
-		f, resp, err := handler.matchMatchConfig(matchConfig, payload, event)
+		f, resp, err := handler.matchMatchConfig(matchConfig, event)
 		if err != nil {
 			return false, resp, err
 		}
@@ -44,9 +44,10 @@ func (handler *Handler) matchEvent(ev *config.EventConfig, payload interface{}, 
 	return false, nil, nil
 }
 
-func (handler *Handler) matchMatchConfig(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) {
+func (handler *Handler) matchMatchConfig(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) {
 	funcs := []matchFunc{
 		handler.matchRepo,
+		handler.matchEventType,
 		handler.matchBranches,
 		handler.matchTags,
 		handler.matchPaths,
@@ -57,7 +58,7 @@ func (handler *Handler) matchMatchConfig(matchConfig *config.MatchConfig, payloa
 		handler.matchIf,
 	}
 	for _, fn := range funcs {
-		f, resp, err := fn(matchConfig, payload, event)
+		f, resp, err := fn(matchConfig, event)
 		if err != nil {
 			return false, resp, err
 		}
@@ -69,15 +70,39 @@ func (handler *Handler) matchMatchConfig(matchConfig *config.MatchConfig, payloa
 	return true, nil, nil
 }
 
-func (handler *Handler) matchRepo(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) {
+func (handler *Handler) matchRepo(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) {
 	repo := event.Repo
+	if matchConfig.RepoOwner == "" && matchConfig.RepoName == "" {
+		return true, nil, nil
+	}
 	return repo.GetFullName() == matchConfig.RepoOwner+"/"+matchConfig.RepoName, nil, nil
 }
 
-func (handler *Handler) matchBranches(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) { //nolint:cyclop
+func (handler *Handler) matchEventType(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) {
+	if len(matchConfig.Events) == 0 {
+		return true, nil, nil
+	}
+	for _, ev := range matchConfig.Events {
+		if ev.Name != "" {
+			continue
+		}
+		if len(ev.Types) == 0 {
+			return true, nil, nil
+		}
+		for _, typ := range ev.Types {
+			if typ == event.Action {
+				return true, nil, nil
+			}
+		}
+	}
+	return false, nil, nil
+}
+
+func (handler *Handler) matchBranches(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) { //nolint:cyclop
 	if len(matchConfig.Branches) == 0 {
 		return true, nil, nil
 	}
+	payload := event.Body
 	if hasPR, ok := payload.(domain.HasPR); ok {
 		pr := hasPR.GetPullRequest()
 		base := pr.GetBase()
@@ -111,10 +136,11 @@ func (handler *Handler) matchBranches(matchConfig *config.MatchConfig, payload i
 	return false, nil, nil
 }
 
-func (handler *Handler) matchTags(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) {
+func (handler *Handler) matchTags(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) {
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
+	payload := event.Body
 	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/tags/")
 		for _, tag := range matchConfig.Tags {
@@ -132,7 +158,7 @@ func (handler *Handler) matchTags(matchConfig *config.MatchConfig, payload inter
 	return false, nil, nil
 }
 
-func (handler *Handler) matchPaths(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) {
+func (handler *Handler) matchPaths(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) {
 	if len(matchConfig.Paths) == 0 {
 		return true, nil, nil
 	}
@@ -151,10 +177,11 @@ func (handler *Handler) matchPaths(matchConfig *config.MatchConfig, payload inte
 	return false, nil, nil
 }
 
-func (handler *Handler) matchBranchesIgnore(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) { //nolint:cyclop
+func (handler *Handler) matchBranchesIgnore(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) { //nolint:cyclop
 	if len(matchConfig.BranchesIgnore) == 0 {
 		return true, nil, nil
 	}
+	payload := event.Body
 	if hasPR, ok := payload.(domain.HasPR); ok {
 		pr := hasPR.GetPullRequest()
 		base := pr.GetBase()
@@ -188,10 +215,11 @@ func (handler *Handler) matchBranchesIgnore(matchConfig *config.MatchConfig, pay
 	return true, nil, nil
 }
 
-func (handler *Handler) matchTagsIgnore(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) {
+func (handler *Handler) matchTagsIgnore(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) {
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
+	payload := event.Body
 	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/tags/")
 		for _, tag := range matchConfig.Tags {
@@ -209,7 +237,7 @@ func (handler *Handler) matchTagsIgnore(matchConfig *config.MatchConfig, payload
 	return true, nil, nil
 }
 
-func (handler *Handler) matchPathsIgnore(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) {
+func (handler *Handler) matchPathsIgnore(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) {
 	if len(matchConfig.PathsIgnore) == 0 {
 		return true, nil, nil
 	}
@@ -235,7 +263,8 @@ func matchPath(changedFile string, paths []string, compiledPaths []*regexp.Regex
 	return false
 }
 
-func (handler *Handler) matchIf(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) {
+func (handler *Handler) matchIf(matchConfig *config.MatchConfig, event *Event) (bool, *Response, error) {
+	// TODO
 	return true, nil, nil
 }
 

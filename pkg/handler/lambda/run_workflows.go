@@ -78,6 +78,7 @@ func (handler *Handler) getWorkflowInput(ctx context.Context, logger *zap.Logger
 
 func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, body interface{}, repo *github.Repository, workflows []*config.WorkflowConfig) (*Response, error) {
 	if len(workflows) == 0 {
+		logger.Info("no workflow is run")
 		return nil, nil //nolint:nilnil
 	}
 
@@ -100,21 +101,23 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 		}
 		inputs["repo_owner"] = repoOwner
 		inputs["repo_name"] = repoName
+		for k, v := range input {
+			inputs[k] = v
+		}
+		logger := logger.With(
+			zap.String("workflow_repo_owner", workflow.RepoOwner),
+			zap.String("workflow_repo_name", workflow.RepoName),
+			zap.String("workflow_file_name", workflow.WorkflowFileName),
+			zap.String("workflow_ref", workflow.Ref))
+		logger.Info("running a GitHub Actions Workflow")
 		_, err := workflow.GitHub.RunWorkflow(ctx, workflow.RepoOwner, workflow.RepoName, workflow.WorkflowFileName, github.CreateWorkflowDispatchEventRequest{
 			Ref:    workflow.Ref,
 			Inputs: inputs,
 		})
-		for k, v := range input {
-			inputs[k] = v
-		}
 		if err != nil {
 			logger.Error(
 				"create a workflow dispatch event by file name",
-				zap.Error(err),
-				zap.String("workflow_repo_owner", workflow.RepoOwner),
-				zap.String("workflow_repo_name", workflow.RepoName),
-				zap.String("workflow_file_name", workflow.WorkflowFileName))
-			continue
+				zap.Error(err))
 		}
 	}
 	return nil, nil //nolint:nilnil
