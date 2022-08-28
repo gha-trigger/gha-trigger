@@ -4,7 +4,7 @@
 
 [Document](https://suzuki-shunsuke.github.io/gha-trigger/) | [Release Note](https://github.com/suzuki-shunsuke/gha-trigger/releases) | [Versioning Policy](https://github.com/suzuki-shunsuke/versioning-policy/blob/v0.1.0/POLICY.md)
 
-GitHub App for Secure GitHub Actions
+Webhook Server for Secure GitHub Actions
 
 ## Status
 
