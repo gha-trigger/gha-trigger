@@ -83,7 +83,7 @@ func (handler *Handler) matchEventType(matchConfig *config.MatchConfig, event *E
 		return true, nil, nil
 	}
 	for _, ev := range matchConfig.Events {
-		if ev.Name != "" {
+		if ev.Name != event.Type {
 			continue
 		}
 		if len(ev.Types) == 0 {
