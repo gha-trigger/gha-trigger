@@ -6,6 +6,7 @@ resource "aws_lambda_function" "main" {
   source_code_hash = filebase64sha256(var.zip_path)
   # runtime          = "go1.x"
   runtime = "provided.al2"
+  timeout = 300
 
   environment {
     variables = {
