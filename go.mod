@@ -5,12 +5,12 @@ go 1.18
 require (
 	cloud.google.com/go/secretmanager v1.5.0
 	github.com/aws/aws-lambda-go v1.34.1
-	github.com/aws/aws-sdk-go v1.44.83
+	github.com/aws/aws-sdk-go v1.44.86
 	github.com/bradleyfalzon/ghinstallation v1.1.1
 	github.com/google/go-github/v45 v45.2.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
-	go.uber.org/zap v1.22.0
-	gopkg.in/yaml.v2 v2.2.8
+	go.uber.org/zap v1.23.0
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
