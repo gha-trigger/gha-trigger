@@ -1,5 +1,5 @@
 resource "aws_secretsmanager_secret" "main" {
-  name = var.secretsmanager_secret_name
+  name = var.secretsmanager_secret_name_main
 }
 
 resource "aws_secretsmanager_secret_version" "main" {
@@ -22,6 +22,7 @@ data "aws_iam_policy_document" "read_secret" {
     actions = ["secretsmanager:GetSecretValue"]
     resources = [
       aws_secretsmanager_secret_version.main.arn,
+      aws_secretsmanager_secret_version.trigger_workflow.arn,
     ]
   }
 }
