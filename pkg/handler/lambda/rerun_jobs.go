@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) rerunJobs(ctx context.Context, logger *zap.Logger, owner, repo, cmtBody string) (*Response, error) {
+func (handler *Handler) rerunJobs(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*Response, error) {
 	// /rerun-job <job id> [<job id> ...]
 	words := strings.Split(strings.TrimSpace(cmtBody), " ")
 	if len(words) < 2 { //nolint:gomnd
@@ -36,7 +37,7 @@ func (handler *Handler) rerunJobs(ctx context.Context, logger *zap.Logger, owner
 			}
 			continue
 		}
-		if res, err := handler.gh.RerunJob(ctx, owner, repo, runID); err != nil {
+		if res, err := gh.RerunJob(ctx, owner, repo, runID); err != nil {
 			logger.Error("rerun a job", zap.Error(err), zap.Int("status_code", res.StatusCode))
 			resp = &Response{
 				StatusCode: http.StatusInternalServerError,

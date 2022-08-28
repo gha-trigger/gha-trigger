@@ -15,6 +15,12 @@ linters:
     - exhaustivestruct
     - varnamelen
     - ireturn
+    - ifshort
+    - nosnakecase
+    - structcheck
+    - varcheck
+    - deadcode
+    - exhaustruct
     # TODO
     - dupl
     - wrapcheck
@@ -24,5 +30,4 @@ linters:
     - funlen
     - gocognit
     - gocyclo
-    - exhaustruct
     - execinquery

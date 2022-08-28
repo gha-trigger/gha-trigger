@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/domain"
 )
 
 type matchFunc func(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error)
@@ -69,14 +69,6 @@ func (handler *Handler) matchMatchConfig(matchConfig *config.MatchConfig, payloa
 	return true, nil, nil
 }
 
-type HasPR interface {
-	GetPullRequest() *github.PullRequest
-}
-
-type HasRef interface {
-	GetRef() string
-}
-
 func (handler *Handler) matchRepo(matchConfig *config.MatchConfig, payload interface{}, event *Event) (bool, *Response, error) {
 	repo := event.Repo
 	return repo.GetFullName() == matchConfig.RepoOwner+"/"+matchConfig.RepoName, nil, nil
@@ -86,7 +78,7 @@ func (handler *Handler) matchBranches(matchConfig *config.MatchConfig, payload i
 	if len(matchConfig.Branches) == 0 {
 		return true, nil, nil
 	}
-	if hasPR, ok := payload.(HasPR); ok {
+	if hasPR, ok := payload.(domain.HasPR); ok {
 		pr := hasPR.GetPullRequest()
 		base := pr.GetBase()
 		ref := base.GetRef()
@@ -102,7 +94,7 @@ func (handler *Handler) matchBranches(matchConfig *config.MatchConfig, payload i
 		}
 		return false, nil, nil
 	}
-	if hasRef, ok := payload.(HasRef); ok {
+	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/heads/")
 		for _, branch := range matchConfig.Branches {
 			if ref == branch {
@@ -123,7 +115,7 @@ func (handler *Handler) matchTags(matchConfig *config.MatchConfig, payload inter
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
-	if hasRef, ok := payload.(HasRef); ok {
+	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/tags/")
 		for _, tag := range matchConfig.Tags {
 			if ref == tag {
@@ -163,7 +155,7 @@ func (handler *Handler) matchBranchesIgnore(matchConfig *config.MatchConfig, pay
 	if len(matchConfig.BranchesIgnore) == 0 {
 		return true, nil, nil
 	}
-	if hasPR, ok := payload.(HasPR); ok {
+	if hasPR, ok := payload.(domain.HasPR); ok {
 		pr := hasPR.GetPullRequest()
 		base := pr.GetBase()
 		ref := base.GetRef()
@@ -179,7 +171,7 @@ func (handler *Handler) matchBranchesIgnore(matchConfig *config.MatchConfig, pay
 		}
 		return true, nil, nil
 	}
-	if hasRef, ok := payload.(HasRef); ok {
+	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/heads/")
 		for _, branch := range matchConfig.Branches {
 			if ref == branch {
@@ -200,7 +192,7 @@ func (handler *Handler) matchTagsIgnore(matchConfig *config.MatchConfig, payload
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
-	if hasRef, ok := payload.(HasRef); ok {
+	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/tags/")
 		for _, tag := range matchConfig.Tags {
 			if ref == tag {

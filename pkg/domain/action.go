@@ -19,3 +19,15 @@ type GitHub interface {
 	RerunWorkflow(ctx context.Context, owner, repo string, runID int64) (*github.Response, error)
 	RerunFailedJobs(ctx context.Context, owner, repo string, runID int64) (*github.Response, error)
 }
+
+type HasPR interface {
+	GetPullRequest() *github.PullRequest
+}
+
+type HasRef interface {
+	GetRef() string
+}
+
+type HasDeployment interface {
+	GetDeployment() *github.Deployment
+}

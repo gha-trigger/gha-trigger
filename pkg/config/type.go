@@ -1,6 +1,10 @@
 package config
 
-import "regexp"
+import (
+	"regexp"
+
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
+)
 
 /*
 e.g.
@@ -22,27 +26,48 @@ events:
 
 // Repos -> Workflows -> Conditions
 type Config struct {
-	AWS       *AWS       `yaml:"aws"`
-	GitHubApp *GitHubApp `yaml:"github_app"`
-	Events    []*EventConfig
-}
-
-type GitHubApp struct {
-	AppID int64 `yaml:"app_id"`
+	AWS        *AWS         `yaml:"aws"`
+	GitHubApps []*GitHubApp `yaml:"github_apps"`
+	Events     []*EventConfig
 }
 
 type AWS struct {
-	Region         string
-	SecretsManager *SecretsManager `yaml:"secretsmanager"`
+	Region string
 }
 
 type SecretsManager struct {
-	Region    string
-	SecretID  string `yaml:"secret_id"`
-	VersionID string `yaml:"version_id"`
+	SecretID  string
+	VersionID string
 }
 
-type Secret struct {
+type GlobalSecret struct {
+	WebhookSecret string `json:"webhook_secret"`
+}
+
+type WebhookSecretConfig struct {
+	SourceType string `yaml:"source_type"`
+	Region     string
+	SecretID   string `yaml:"secret_id"`
+}
+
+type GitHubApp struct {
+	Name           string
+	Org            string
+	User           string
+	AppID          int64 `yaml:"app_id"`
+	InstallationID int64 `json:"installation_id"`
+	Secret         *GitHubAppSecretConfig
+}
+
+type GitHubAppSecretConfig struct {
+	Type     string
+	Region   string
+	SecretID string `yaml:"secret_id"`
+}
+
+type GitHubAppSecret struct {
+	AppID               int64  `json:"app_id"`
+	InstallationID      int64  `json:"installation_id"`
 	WebhookSecret       string `json:"webhook_secret"`
 	GitHubAppPrivateKey string `json:"github_app_private_key"`
 }
@@ -80,6 +105,8 @@ type WorkflowConfig struct {
 	WorkflowFileName string `yaml:"workflow_file_name"`
 	Ref              string
 	Inputs           map[string]interface{}
+	GitHubAppName    string         `yaml:"github_app_name"`
+	GitHub           *github.Client `yaml:"-"`
 }
 
 func compileStringsByRegexp(arr []string) []*regexp.Regexp {

@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger, owner, repo, cmtBody string) (*Response, error) {
+func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*Response, error) {
 	// /rerun-failed-job <workflow id> [<workflow id> ...]
 	words := strings.Split(strings.TrimSpace(cmtBody), " ")
 	if len(words) < 2 { //nolint:gomnd
@@ -36,7 +37,7 @@ func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger,
 			continue
 		}
 
-		if res, err := handler.gh.RerunFailedJobs(ctx, owner, repo, runID); err != nil {
+		if res, err := gh.RerunFailedJobs(ctx, owner, repo, runID); err != nil {
 			logger.Error(
 				"rerun failed jobs", zap.Error(err),
 				zap.Int("status_code", res.StatusCode),
