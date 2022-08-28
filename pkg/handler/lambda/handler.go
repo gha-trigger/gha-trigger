@@ -39,7 +39,7 @@ func newGitHubApp(ctx context.Context, awsClient *aws.Client, appCfg *config.Git
 	input := &aws.GetSecretValueInput{
 		SecretId: aws.String(appCfg.Secret.SecretID),
 	}
-	secretOutput, err := awsClient.GetSecretValueWithContext(ctx, input)
+	secretOutput, err := awsClient.GetSecretValueWithContext(ctx, input) //nolint:contextcheck
 	if err != nil {
 		return nil, fmt.Errorf("read the secret value from AWS Secrets Manager: %w", err)
 	}
