@@ -30,3 +30,9 @@ variable "lambda_role_name" {
   description = ""
   default     = "test-gha-trigger"
 }
+
+variable "api_gateway_name" {
+  type        = string
+  description = ""
+  default     = "test-gha-trigger"
+}
