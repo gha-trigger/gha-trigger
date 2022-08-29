@@ -3,9 +3,14 @@ variable "region" {
   default = "us-east-1"
 }
 
-variable "secretsmanager_secret_name" {
+variable "secretsmanager_secret_name_main" {
   type    = string
-  default = "test-gha-trigger"
+  default = "test-gha-trigger-main"
+}
+
+variable "secretsmanager_secret_name_trigger_workflow" {
+  type    = string
+  default = "test-gha-trigger-trigger-workflow"
 }
 
 variable "zip_path" {

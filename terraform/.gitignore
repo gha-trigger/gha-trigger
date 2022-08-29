@@ -1,4 +1,5 @@
 secret.yaml
+secret_trigger_workflow.yaml
 config.yaml
 terraform.tfvars
 .terraform
