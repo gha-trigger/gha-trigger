@@ -8,11 +8,10 @@ on:
     paths:
       - "**.go"
       - ".github/workflows/test.yaml"
-      - .golangci.yml
+      - .golangci.yaml
       - go.mod
       - go.sum
       - aqua/golangci-lint.yaml
-      - aqua/reviewdog.yaml
 
 jobs:
   test:
