@@ -26,7 +26,7 @@ resource "aws_api_gateway_integration" "main" {
   resource_id             = aws_api_gateway_resource.main.id
   http_method             = aws_api_gateway_method.main.http_method
   integration_http_method = "POST"
-  type                    = "AWS_PROXY"
+  type                    = "AWS"
   uri                     = aws_lambda_function.main.invoke_arn
 
   request_parameters = {
