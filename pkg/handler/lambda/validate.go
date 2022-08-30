@@ -9,8 +9,9 @@ import (
 )
 
 func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayProxyRequest) (*GitHubApp, *Event, *Response) {
-	appIDS, ok := event.Headers["x-github-hook-installation-target-id"]
+	appIDS, ok := event.Headers["X-GITHUB-HOOK-INSTALLATION-TARGET-ID"]
 	if !ok {
+		logger.Warn("header X-GitHub-Hook-Installation-Target-ID is required")
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
@@ -20,6 +21,7 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 	}
 	appID, err := parseInt64(appIDS)
 	if err != nil {
+		logger.Warn("header X-GitHub-Hook-Installation-Target-ID must be integer")
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
@@ -29,6 +31,7 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 	}
 	ghApp, ok := handler.ghs[appID]
 	if !ok {
+		logger.Warn("unknown GitHub App ID", zap.Int64("github_app_id", appID))
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
@@ -37,7 +40,7 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 		}
 	}
 
-	sig, ok := event.Headers["x-hub-signature"]
+	sig, ok := event.Headers["X-HUB-SIGNATURE"]
 	if !ok {
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
@@ -57,7 +60,7 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 		}
 	}
 
-	evType, ok := event.Headers["x-github-event"]
+	evType, ok := event.Headers["X-GITHUB-EVENT"]
 	if !ok {
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
@@ -78,7 +81,8 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 		}
 	}
 	return ghApp, &Event{
-		Body: body,
-		Type: evType,
+		Body:  body,
+		Type:  evType,
+		Event: event,
 	}, nil
 }

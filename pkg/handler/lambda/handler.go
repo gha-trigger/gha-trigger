@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/aws"
@@ -140,6 +141,16 @@ type HasEventType interface {
 
 func (handler *Handler) Do(ctx context.Context, event *events.APIGatewayProxyRequest) (*Response, error) {
 	logger := handler.logger
+	logger.Info("start a request")
+	defer logger.Info("end a request")
+
+	// Normalize headers
+	headers := make(map[string]string, len(event.Headers))
+	for k, v := range event.Headers {
+		headers[strings.ToUpper(k)] = v
+	}
+	event.Headers = headers
+
 	ghApp, ev, resp := handler.validate(logger, event)
 
 	if resp != nil {
@@ -190,5 +201,5 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 		return resp, err
 	}
 
-	return handler.runWorkflows(ctx, logger, ghApp.Client, body, repo, workflows)
+	return handler.runWorkflows(ctx, logger, ghApp.Client, ev, workflows)
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
@@ -19,11 +20,14 @@ func (handler *Handler) getWorkflowInput(ctx context.Context, logger *zap.Logger
 
 	ref := ""
 	sha := ""
+	mergedCommitSHA := ""
+	prNumber := 0
 	switch ev := body.(type) {
 	case *github.PullRequestTargetEvent:
 		base := ev.GetPullRequest().GetBase()
 		ref = base.GetRef()
 		sha = base.GetSHA()
+		prNumber = ev.GetNumber()
 	case *github.PushEvent:
 		ref = ev.GetRef()
 		sha = ev.GetAfter()
@@ -66,21 +70,33 @@ func (handler *Handler) getWorkflowInput(ctx context.Context, logger *zap.Logger
 				}
 			}
 			ref = fmt.Sprintf("refs/pull/%v/merge", pr.GetNumber())
-			sha = pr.GetMergeCommitSHA()
+			mergedCommitSHA = pr.GetMergeCommitSHA()
+			sha = pr.GetHead().GetSHA()
+			prNumber = pr.GetNumber()
 		}
 		// TODO go-github doesn't support registry_package event
 	}
-	return map[string]interface{}{
-		"ref": ref,
-		"sha": sha,
-	}, nil
+	if mergedCommitSHA == "" {
+		mergedCommitSHA = sha
+	}
+	m := map[string]interface{}{
+		"ref":               ref,
+		"sha":               sha,
+		"merged_commit_sha": mergedCommitSHA,
+	}
+	if prNumber != 0 {
+		m["pr_number"] = strconv.Itoa(prNumber)
+	}
+	return m, nil
 }
 
-func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, body interface{}, repo *github.Repository, workflows []*config.WorkflowConfig) (*Response, error) {
+func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev *Event, workflows []*config.WorkflowConfig) (*Response, error) {
 	if len(workflows) == 0 {
 		logger.Info("no workflow is run")
 		return nil, nil //nolint:nilnil
 	}
+	repo := ev.Repo
+	body := ev.Body
 
 	repoOwner := repo.GetOwner().GetLogin()
 	repoName := repo.GetName()
@@ -97,8 +113,8 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 		inputs := make(map[string]interface{}, len(workflow.Inputs))
 		for k, v := range workflow.Inputs {
 			inputs[k] = v
-			inputs["payload"] = body
 		}
+		inputs["payload"] = ev.Event.Body
 		inputs["repo_owner"] = repoOwner
 		inputs["repo_name"] = repoName
 		for k, v := range input {

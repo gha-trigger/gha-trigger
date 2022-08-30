@@ -80,8 +80,8 @@ type EventConfig struct {
 
 type MatchConfig struct {
 	// And Condition
-	RepoOwner              string
-	RepoName               string
+	RepoOwner              string `yaml:"repo_owner"`
+	RepoName               string `yaml:"repo_name"`
 	Events                 []*Event
 	Branches               []string
 	Tags                   []string
@@ -100,8 +100,8 @@ type MatchConfig struct {
 }
 
 type WorkflowConfig struct {
-	RepoOwner        string
-	RepoName         string
+	RepoOwner        string `yaml:"repo_owner"`
+	RepoName         string `yaml:"repo_name"`
 	WorkflowFileName string `yaml:"workflow_file_name"`
 	Ref              string
 	Inputs           map[string]interface{}
