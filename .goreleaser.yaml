@@ -7,7 +7,7 @@ before:
 builds:
   - id: gha-trigger-lambda
     main: ./cmd/gha-trigger-lambda
-    binary: gha-trigger-lambda
+    binary: bootstrap
     env:
       - CGO_ENABLED=0
     goos:
