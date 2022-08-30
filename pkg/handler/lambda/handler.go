@@ -73,7 +73,7 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 	if err := yaml.Unmarshal([]byte(osEnv.Getenv("CONFIG")), cfg); err != nil {
 		return nil, fmt.Errorf("parse the configuration as YAML: %w", err)
 	}
-	compileCfg(cfg)
+	initCfg(cfg)
 	// read env
 	// read secret
 	awsClient := aws.New(cfg.AWS)
@@ -111,6 +111,22 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 		logger: logger,
 		ghs:    ghApps,
 	}, nil
+}
+
+func initCfg(cfg *config.Config) {
+	compileCfg(cfg)
+	for _, event := range cfg.Events {
+		for _, match := range event.Matches {
+			for _, ev := range match.Events {
+				if ev.Name == "pull_request" && ev.Types == nil {
+					// https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+					// > By default, a workflow only runs when a pull_request event's activity type is
+					// > opened, synchronize, or reopened.
+					ev.Types = []string{"opened", "synchronize", "reopened"}
+				}
+			}
+		}
+	}
 }
 
 func compileCfg(cfg *config.Config) {
