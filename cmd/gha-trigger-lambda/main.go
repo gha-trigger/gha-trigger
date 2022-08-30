@@ -41,7 +41,7 @@ func core() error {
 		logger.Error("initialize a handler", zap.Error(err))
 		return err
 	}
-	logger.Debug("start handler")
+	logger.Info("start handler")
 	lambda.StartWithOptions(handler.Do, lambda.WithContext(ctx))
 	return nil
 }
