@@ -114,7 +114,7 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 		for k, v := range workflow.Inputs {
 			inputs[k] = v
 		}
-		inputs["payload"] = ev.Event.Body
+		inputs["payload"] = ev.Request.Body
 		inputs["repo_owner"] = repoOwner
 		inputs["repo_name"] = repoName
 		for k, v := range input {

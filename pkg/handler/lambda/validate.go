@@ -3,29 +3,30 @@ package lambda
 import (
 	"net/http"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayProxyRequest) (*GitHubApp, *Event, *Response) {
-	appIDS, ok := event.Headers["X-GITHUB-HOOK-INSTALLATION-TARGET-ID"]
+func (handler *Handler) validate(logger *zap.Logger, req *Request) (*GitHubApp, *Event, *Response) {
+	headers := req.Params.Headers
+	bodyStr := req.Body
+	appIDS, ok := headers["X-GITHUB-HOOK-INSTALLATION-TARGET-ID"]
 	if !ok {
-		logger.Warn("header X-GitHub-Hook-Installation-Target-ID is required")
+		logger.Warn("header X-GITHUB-HOOK-INSTALLATION-TARGET-ID is required")
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
-				"error": "header X-GitHub-Hook-Installation-Target-ID is required",
+				"error": "header X-GITHUB-HOOK-INSTALLATION-TARGET-ID is required",
 			},
 		}
 	}
 	appID, err := parseInt64(appIDS)
 	if err != nil {
-		logger.Warn("header X-GitHub-Hook-Installation-Target-ID must be integer")
+		logger.Warn("header X-GITHUB-HOOK-INSTALLATION-TARGET-ID must be integer")
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
-				"error": "header X-GitHub-Hook-Installation-Target-ID must be integer",
+				"error": "header X-GITHUB-HOOK-INSTALLATION-TARGET-ID must be integer",
 			},
 		}
 	}
@@ -40,17 +41,18 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 		}
 	}
 
-	sig, ok := event.Headers["X-HUB-SIGNATURE"]
+	sig, ok := headers["X-HUB-SIGNATURE"]
 	if !ok {
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
-				"error": "header X-Hub-Signature is required",
+				"error": "header X-HUB-SIGNATURE is required",
 			},
 		}
 	}
 
-	if err := github.ValidateSignature(sig, []byte(event.Body), []byte(ghApp.WebhookSecret)); err != nil {
+	bodyB := []byte(bodyStr)
+	if err := github.ValidateSignature(sig, bodyB, []byte(ghApp.WebhookSecret)); err != nil {
 		logger.Warn("validate the webhook signature", zap.Error(err))
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
@@ -60,7 +62,7 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 		}
 	}
 
-	evType, ok := event.Headers["X-GITHUB-EVENT"]
+	evType, ok := headers["X-GITHUB-EVENT"]
 	if !ok {
 		return nil, nil, &Response{
 			StatusCode: http.StatusBadRequest,
@@ -70,7 +72,7 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 		}
 	}
 
-	body, err := github.ParseWebHook(evType, []byte(event.Body))
+	body, err := github.ParseWebHook(evType, bodyB)
 	if err != nil {
 		logger.Warn("parse a webhook payload", zap.Error(err))
 		return nil, nil, &Response{
@@ -81,8 +83,8 @@ func (handler *Handler) validate(logger *zap.Logger, event *events.APIGatewayPro
 		}
 	}
 	return ghApp, &Event{
-		Body:  body,
-		Type:  evType,
-		Event: event,
+		Body:    body,
+		Type:    evType,
+		Request: req,
 	}, nil
 }
