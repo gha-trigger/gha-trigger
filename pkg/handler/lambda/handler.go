@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/aws"
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
@@ -116,9 +115,9 @@ type Event struct {
 	Body         interface{}
 	ChangedFiles []string
 	Repo         *github.Repository
-	Event        *events.APIGatewayProxyRequest
 	Type         string
 	Action       string
+	Request      *Request
 }
 
 type Response struct {
@@ -139,19 +138,39 @@ type HasEventType interface {
 	GetAction() string
 }
 
-func (handler *Handler) Do(ctx context.Context, event *events.APIGatewayProxyRequest) (*Response, error) {
+type Request struct {
+	// Generate template > Method request passthrough
+	Body   string              `json:"body-json"`
+	Params *RequestParamsField `json:"params"`
+}
+
+type RequestParamsField struct {
+	Headers map[string]string `json:"header"`
+}
+
+func (handler *Handler) Do(ctx context.Context, req *Request) (*Response, error) {
+	// func (handler *Handler) Do(ctx context.Context, e interface{}) (*Response, error) {
+	// 	logger := handler.logger
+	// 	logger.Info("start a request")
+	// 	defer logger.Info("end a request")
+	//
+	// 	var req *Request
+	//
+	// 	if err := json.NewEncoder(os.Stderr).Encode(e); err != nil {
+	// 		return nil, err
+	// 	}
 	logger := handler.logger
 	logger.Info("start a request")
 	defer logger.Info("end a request")
 
 	// Normalize headers
-	headers := make(map[string]string, len(event.Headers))
-	for k, v := range event.Headers {
+	headers := make(map[string]string, len(req.Params.Headers))
+	for k, v := range req.Params.Headers {
 		headers[strings.ToUpper(k)] = v
 	}
-	event.Headers = headers
+	req.Params.Headers = headers
 
-	ghApp, ev, resp := handler.validate(logger, event)
+	ghApp, ev, resp := handler.validate(logger, req)
 
 	if resp != nil {
 		return resp, nil
