@@ -13,6 +13,12 @@ variable "secretsmanager_secret_name_trigger_workflow" {
   default = "test-gha-trigger-trigger-workflow"
 }
 
+variable "lambda_architecture" {
+  type        = string
+  description = ""
+  default     = "x86_64"
+}
+
 variable "zip_path" {
   type        = string
   description = ""

@@ -6,6 +6,7 @@ resource "aws_lambda_function" "main" {
   source_code_hash = filebase64sha256(var.zip_path)
   runtime          = "provided.al2"
   timeout          = 300
+  architectures    = [var.lambda_architecture]
 
   environment {
     variables = {

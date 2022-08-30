@@ -35,7 +35,19 @@ tasks:
     script: go install ./cmd/tfcmt
   - name: build
     script: |
-      GOOS=linux GOARCH=amd64 go build -o dist/bootstrap ./cmd/gha-trigger-lambda
-      cd dist
-      zip gha-trigger-lambda_linux_amd64.zip bootstrap
-      mv gha-trigger-lambda_linux_amd64.zip ../terraform
+      tempdir=$(mktemp -d)
+      wd=$PWD
+      GOOS=linux GOARCH={{.arch}} go build -o "$tempdir/bootstrap" ./cmd/gha-trigger-lambda
+      pushd "$tempdir"
+      zip "gha-trigger-lambda_linux_{{.arch}}.zip" bootstrap
+      mv "gha-trigger-lambda_linux_{{.arch}}.zip" "$wd/terraform"
+      popd
+      rm -R "$tempdir"
+    args:
+      - name: arch
+        required: false
+        default: amd64
+        validate:
+          - enum:
+              - amd64
+              - arm64
