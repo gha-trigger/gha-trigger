@@ -50,10 +50,11 @@ func (handler *Handler) matchMatchConfig(matchConfig *config.MatchConfig, event 
 		handler.matchEventType,
 		handler.matchBranches,
 		handler.matchTags,
-		handler.matchPaths,
 		handler.matchBranches,
 		handler.matchBranchesIgnore,
 		handler.matchTagsIgnore,
+		// check paths lastly because api call is required
+		handler.matchPaths,
 		handler.matchPathsIgnore,
 		handler.matchIf,
 	}
@@ -86,6 +87,10 @@ func (handler *Handler) matchEventType(matchConfig *config.MatchConfig, event *E
 		if ev.Name != event.Type {
 			continue
 		}
+		// TODO
+		// https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+		// > By default, a workflow only runs when a pull_request event's activity type is
+		// > opened, synchronize, or reopened.
 		if len(ev.Types) == 0 {
 			return true, nil, nil
 		}
