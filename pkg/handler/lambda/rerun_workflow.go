@@ -36,7 +36,7 @@ func (handler *Handler) rerunWorkflows(ctx context.Context, logger *zap.Logger, 
 			}
 			continue
 		}
-		if res, err := gh.CancelWorkflow(ctx, owner, repo, runID); err != nil {
+		if res, err := gh.RerunWorkflow(ctx, owner, repo, runID); err != nil {
 			logger.Error("rerun a workflow", zap.Error(err), zap.Int("status_code", res.StatusCode))
 			resp = &Response{
 				StatusCode: http.StatusInternalServerError,
