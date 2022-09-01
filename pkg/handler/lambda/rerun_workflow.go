@@ -27,8 +27,9 @@ func (handler *Handler) rerunWorkflows(ctx context.Context, logger *zap.Logger, 
 			"message": "workflows are rerun",
 		},
 	}
-	for _, workflowID := range words[1:] {
-		runID, err := parseInt64(workflowID)
+	for _, workflowRunID := range words[1:] {
+		// TODO validation
+		runID, err := parseInt64(workflowRunID)
 		if err != nil {
 			logger.Warn("parse a workflow run id as int64", zap.Error(err))
 			if resp.StatusCode == http.StatusOK {
@@ -36,6 +37,8 @@ func (handler *Handler) rerunWorkflows(ctx context.Context, logger *zap.Logger, 
 			}
 			continue
 		}
+		logger := logger.With(zap.Int64("workflow_run_id", runID))
+		logger.Info("rerunning a workflow")
 		if res, err := gh.RerunWorkflow(ctx, owner, repo, runID); err != nil {
 			logger.Error("rerun a workflow", zap.Error(err), zap.Int("status_code", res.StatusCode))
 			resp = &Response{
