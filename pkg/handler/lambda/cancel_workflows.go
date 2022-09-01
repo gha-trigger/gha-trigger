@@ -28,6 +28,7 @@ func (handler *Handler) cancelWorkflows(ctx context.Context, logger *zap.Logger,
 		},
 	}
 	for _, workflowID := range words[1:] {
+		// TODO validation
 		runID, err := parseInt64(workflowID)
 		if err != nil {
 			logger.Warn("parse a workflow run id as int64", zap.Error(err))
@@ -36,6 +37,8 @@ func (handler *Handler) cancelWorkflows(ctx context.Context, logger *zap.Logger,
 			}
 			continue
 		}
+		logger := logger.With(zap.Int64("workflow_run_id", runID))
+		logger.Info("cancelling a workflow")
 		if res, err := gh.CancelWorkflow(ctx, owner, repo, runID); err != nil {
 			logger.Error("cancel a workflow", zap.Error(err), zap.Int("status_code", res.StatusCode))
 			resp = &Response{

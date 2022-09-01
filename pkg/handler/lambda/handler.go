@@ -118,6 +118,7 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 	logger = logger.With(
 		zap.String("event_repo_owner", repoCfg.RepoOwner),
 		zap.String("event_repo_name", repoCfg.RepoName),
+		zap.String("ci_repo_name", repoCfg.CIRepoName),
 	)
 
 	if resp, err := handler.handleSlashCommand(ctx, logger, repoCfg, body); resp != nil {

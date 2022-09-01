@@ -36,13 +36,12 @@ func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger,
 			}
 			continue
 		}
-
+		logger := logger.With(zap.Int64("workflow_run_id", runID))
+		logger.Info("rerunning failed jobs")
 		if res, err := gh.RerunFailedJobs(ctx, owner, repo, runID); err != nil {
 			logger.Error(
 				"rerun failed jobs", zap.Error(err),
 				zap.Int("status_code", res.StatusCode),
-				zap.String("repo", owner+"/"+repo),
-				zap.Int64("workflow_id", runID),
 			)
 			resp = &Response{
 				StatusCode: http.StatusInternalServerError,
