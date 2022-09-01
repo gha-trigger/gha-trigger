@@ -92,7 +92,7 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 	for i := 0; i < numRepos; i++ {
 		repo := cfg.Repos[i]
 		numEvents := len(repo.Events)
-		gh, ok := ghs[repo.TriggerGitHubAppName]
+		gh, ok := ghs[repo.WorkflowGitHubAppName]
 		if !ok {
 			return nil, errors.New("invalid github app name")
 		}
