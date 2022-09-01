@@ -31,12 +31,12 @@ type Config struct {
 }
 
 type Repo struct {
-	RepoOwner            string `yaml:"repo_owner"`
-	RepoName             string `yaml:"repo_name"`
-	TriggerGitHubAppName string `yaml:"trigger_github_app_name"`
-	CIRepoName           string `yaml:"ci_repo_name"`
-	Events               []*Event
-	GitHub               *github.Client `yaml:"-"`
+	RepoOwner             string `yaml:"repo_owner"`
+	RepoName              string `yaml:"repo_name"`
+	WorkflowGitHubAppName string `yaml:"workflow_github_app_name"`
+	CIRepoName            string `yaml:"ci_repo_name"`
+	Events                []*Event
+	GitHub                *github.Client `yaml:"-"`
 }
 
 type AWS struct {
