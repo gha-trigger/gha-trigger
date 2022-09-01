@@ -29,5 +29,6 @@ func (client *Client) RerunFailedJobs(ctx context.Context, owner, repo string, r
 }
 
 func (client *Client) CancelWorkflow(ctx context.Context, owner, repo string, runID int64) (*Response, error) {
-	return client.action.CancelWorkflowRunByID(ctx, owner, repo, runID)
+	resp, err := client.action.CancelWorkflowRunByID(ctx, owner, repo, runID)
+	return resp, ignoreAcceptedError(err)
 }
