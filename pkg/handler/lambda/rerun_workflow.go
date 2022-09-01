@@ -27,8 +27,8 @@ func (handler *Handler) rerunWorkflows(ctx context.Context, logger *zap.Logger, 
 			"message": "workflows are rerun",
 		},
 	}
-	for _, workflowID := range words[1:] {
-		runID, err := parseInt64(workflowID)
+	for _, workflowRunID := range words[1:] {
+		runID, err := parseInt64(workflowRunID)
 		if err != nil {
 			logger.Warn("parse a workflow run id as int64", zap.Error(err))
 			if resp.StatusCode == http.StatusOK {

@@ -24,11 +24,19 @@ events:
       event: foo
 */
 
-// Repos -> Workflows -> Conditions
 type Config struct {
 	AWS        *AWS         `yaml:"aws"`
 	GitHubApps []*GitHubApp `yaml:"github_apps"`
-	Events     []*EventConfig
+	Repos      []*Repo
+}
+
+type Repo struct {
+	RepoOwner            string `yaml:"repo_owner"`
+	RepoName             string `yaml:"repo_name"`
+	TriggerGitHubAppName string `yaml:"trigger_github_app_name"`
+	CIRepoName           string `yaml:"ci_repo_name"`
+	Events               []*Event
+	GitHub               *github.Client `yaml:"-"`
 }
 
 type AWS struct {
@@ -40,15 +48,15 @@ type SecretsManager struct {
 	VersionID string
 }
 
-type GlobalSecret struct {
-	WebhookSecret string `json:"webhook_secret"`
-}
+// type GlobalSecret struct {
+// 	WebhookSecret string `json:"webhook_secret"`
+// }
 
-type WebhookSecretConfig struct {
-	SourceType string `yaml:"source_type"`
-	Region     string
-	SecretID   string `yaml:"secret_id"`
-}
+// type WebhookSecret struct {
+// 	SourceType string `yaml:"source_type"`
+// 	Region     string
+// 	SecretID   string `yaml:"secret_id"`
+// }
 
 type GitHubApp struct {
 	Name           string
@@ -72,17 +80,15 @@ type GitHubAppSecret struct {
 	GitHubAppPrivateKey string `json:"github_app_private_key"`
 }
 
-type EventConfig struct {
+type Event struct {
 	// OR Condition
-	Matches   []*MatchConfig
-	Workflows []*WorkflowConfig
+	Matches  []*Match
+	Workflow *Workflow
 }
 
-type MatchConfig struct {
+type Match struct {
 	// And Condition
-	RepoOwner              string `yaml:"repo_owner"`
-	RepoName               string `yaml:"repo_name"`
-	Events                 []*Event
+	Events                 []*EventType
 	Branches               []string
 	Tags                   []string
 	Paths                  []string
@@ -99,13 +105,10 @@ type MatchConfig struct {
 	CompiledIf             string           `yaml:"-"`
 }
 
-type WorkflowConfig struct {
-	RepoOwner        string `yaml:"repo_owner"`
-	RepoName         string `yaml:"repo_name"`
+type Workflow struct {
 	WorkflowFileName string `yaml:"workflow_file_name"`
 	Ref              string
 	Inputs           map[string]interface{}
-	GitHubAppName    string         `yaml:"github_app_name"`
 	GitHub           *github.Client `yaml:"-"`
 }
 
@@ -121,7 +124,7 @@ func compileStringsByRegexp(arr []string) []*regexp.Regexp {
 	return ret
 }
 
-func (mc *MatchConfig) Compile() error {
+func (mc *Match) Compile() error {
 	mc.CompiledBranches = compileStringsByRegexp(mc.Branches)
 	mc.CompiledTags = compileStringsByRegexp(mc.Tags)
 	mc.CompiledPaths = compileStringsByRegexp(mc.Paths)
@@ -131,7 +134,7 @@ func (mc *MatchConfig) Compile() error {
 	return nil
 }
 
-type Event struct {
+type EventType struct {
 	Name  string
 	Types []string
 }
