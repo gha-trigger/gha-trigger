@@ -12,6 +12,7 @@ const (
 )
 
 type (
+	AcceptedError                      = github.AcceptedError
 	CommitFile                         = github.CommitFile
 	CreateWorkflowDispatchEventRequest = github.CreateWorkflowDispatchEventRequest
 	Deployment                         = github.Deployment
