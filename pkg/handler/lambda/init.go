@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/aws"
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/aws"
+	"github.com/gha-trigger/gha-trigger/pkg/config"
+	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"

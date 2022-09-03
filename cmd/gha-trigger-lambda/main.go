@@ -7,7 +7,7 @@ import (
 	"syscall"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	lmb "github.com/suzuki-shunsuke/gha-trigger/pkg/handler/lambda"
+	lmb "github.com/gha-trigger/gha-trigger/pkg/handler/lambda"
 	"go.uber.org/zap"
 )
 

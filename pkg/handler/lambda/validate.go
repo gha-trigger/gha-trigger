@@ -3,7 +3,7 @@ package lambda
 import (
 	"net/http"
 
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 

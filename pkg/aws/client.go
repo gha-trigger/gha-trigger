@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
+	"github.com/gha-trigger/gha-trigger/pkg/config"
 )
 
 type Client struct {

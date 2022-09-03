@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/domain"
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/domain"
+	"github.com/gha-trigger/gha-trigger/pkg/github"
 )
 
 func init() { //nolint:gochecknoinits
