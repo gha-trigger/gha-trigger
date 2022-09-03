@@ -3,8 +3,8 @@ package lambda
 import (
 	"strings"
 
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/domain"
+	"github.com/gha-trigger/gha-trigger/pkg/config"
+	"github.com/gha-trigger/gha-trigger/pkg/domain"
 )
 
 type matchFunc func(matchConfig *config.Match, event *Event) (bool, *Response, error)

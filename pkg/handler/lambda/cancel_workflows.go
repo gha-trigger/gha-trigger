@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 

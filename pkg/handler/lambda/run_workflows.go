@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/domain"
-	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/config"
+	"github.com/gha-trigger/gha-trigger/pkg/domain"
+	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 
