@@ -101,11 +101,22 @@ resource "aws_api_gateway_integration_response" "main" {
   resource_id = aws_api_gateway_resource.main.id
   http_method = aws_api_gateway_method.main.http_method
   status_code = aws_api_gateway_method_response.main.status_code
+  depends_on = [
+    # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_integration_response
+    # > Depends on having aws_api_gateway_integration inside your rest api.
+    # To ensure this you might need to add an explicit depends_on for clean runs.
+    aws_api_gateway_integration.main
+  ]
 }
 
 resource "aws_api_gateway_deployment" "main" {
   rest_api_id       = aws_api_gateway_rest_api.main.id
   stage_description = "setting file hash = ${md5(file("api_gateway.tf"))}"
+
+  depends_on = [
+    # Error: Error creating API Gateway Deployment: BadRequestException: The REST API doesn't contain any methods
+    aws_api_gateway_method.main
+  ]
 
   lifecycle {
     create_before_destroy = true
