@@ -172,7 +172,7 @@ func (handler *Handler) matchBranchesIgnore(matchConfig *config.Match, event *Ev
 		pr := hasPR.GetPullRequest()
 		base := pr.GetBase()
 		ref := base.GetRef()
-		for _, branch := range matchConfig.Branches {
+		for _, branch := range matchConfig.BranchesIgnore {
 			f, err := branch.Match(ref)
 			if err != nil {
 				return false, nil, err
@@ -185,7 +185,7 @@ func (handler *Handler) matchBranchesIgnore(matchConfig *config.Match, event *Ev
 	}
 	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/heads/")
-		for _, branch := range matchConfig.Branches {
+		for _, branch := range matchConfig.BranchesIgnore {
 			f, err := branch.Match(ref)
 			if err != nil {
 				return false, nil, err
@@ -206,7 +206,7 @@ func (handler *Handler) matchTagsIgnore(matchConfig *config.Match, event *Event)
 	payload := event.Body
 	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/tags/")
-		for _, tag := range matchConfig.Tags {
+		for _, tag := range matchConfig.TagsIgnore {
 			f, err := tag.Match(ref)
 			if err != nil {
 				return false, nil, err
