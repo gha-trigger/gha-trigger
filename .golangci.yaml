@@ -33,3 +33,6 @@ linters:
     - gocognit
     - gocyclo
     - execinquery
+    - goconst
+    - cyclop
+    - funlen
