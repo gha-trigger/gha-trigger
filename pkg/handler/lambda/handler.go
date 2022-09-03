@@ -11,12 +11,13 @@ import (
 )
 
 type Event struct {
-	Body         interface{}
-	ChangedFiles []string
-	Repo         *github.Repository
-	Type         string
-	Action       string
-	Request      *Request
+	Body            interface{}
+	ChangedFiles    []string
+	ChangedFileObjs []*github.CommitFile
+	Repo            *github.Repository
+	Type            string
+	Action          string
+	Request         *Request
 }
 
 type Response struct {
