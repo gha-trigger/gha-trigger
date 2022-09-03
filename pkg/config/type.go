@@ -1,7 +1,10 @@
 package config
 
 import (
+	"errors"
+	"path"
 	"regexp"
+	"strings"
 
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/github"
 )
@@ -86,23 +89,75 @@ type Event struct {
 	Workflow *Workflow
 }
 
+type StringMatch struct {
+	// equal
+	// contain
+	// regexp
+	// prefix
+	// suffix
+	// glob
+	Type   string
+	Value  string
+	regexp *regexp.Regexp
+}
+
+var errInvalidStringType = errors.New("type is invalid")
+
+func validateStringType(s string) error {
+	switch s {
+	case "equal", "contain", "regexp", "prefix", "suffix", "glob":
+		return nil
+	default:
+		return errInvalidStringType
+	}
+}
+
+func (sm *StringMatch) Match(s string) (bool, error) {
+	switch sm.Type {
+	case "equal":
+		return sm.Value == s, nil
+	case "contain":
+		return strings.Contains(s, sm.Value), nil
+	case "regexp":
+		return sm.regexp.MatchString(s), nil
+	case "prefix":
+		return strings.HasPrefix(s, sm.Value), nil
+	case "suffix":
+		return strings.HasSuffix(s, sm.Value), nil
+	case "glob":
+		return path.Match(sm.Value, s)
+	default:
+		return false, errInvalidStringType
+	}
+}
+
+func (sm *StringMatch) Compile() error {
+	if sm.Type != "regexp" {
+		return nil
+	}
+	p, err := regexp.Compile(sm.Value)
+	if err != nil {
+		return err
+	}
+	sm.regexp = p
+	return nil
+}
+
+func (sm *StringMatch) Validate() error {
+	return validateStringType(sm.Type)
+}
+
 type Match struct {
 	// And Condition
-	Events                 []*EventType
-	Branches               []string
-	Tags                   []string
-	Paths                  []string
-	BranchesIgnore         []string `yaml:"branches-ignore"`
-	TagsIgnore             []string `yaml:"tags-ignore"`
-	PathsIgnore            []string `yaml:"paths-ignore"`
-	If                     string
-	CompiledBranches       []*regexp.Regexp `yaml:"-"`
-	CompiledTags           []*regexp.Regexp `yaml:"-"`
-	CompiledPaths          []*regexp.Regexp `yaml:"-"`
-	CompiledBranchesIgnore []*regexp.Regexp `yaml:"-"`
-	CompiledTagsIgnore     []*regexp.Regexp `yaml:"-"`
-	CompiledPathsIgnore    []*regexp.Regexp `yaml:"-"`
-	CompiledIf             string           `yaml:"-"`
+	Events         []*EventType
+	Branches       []*StringMatch
+	Tags           []*StringMatch
+	Paths          []*StringMatch
+	BranchesIgnore []*StringMatch `yaml:"branches-ignore"`
+	TagsIgnore     []*StringMatch `yaml:"tags-ignore"`
+	PathsIgnore    []*StringMatch `yaml:"paths-ignore"`
+	If             string
+	CompiledIf     string `yaml:"-"`
 }
 
 type Workflow struct {
@@ -111,25 +166,37 @@ type Workflow struct {
 	GitHub           *github.Client `yaml:"-"`
 }
 
-func compileStringsByRegexp(arr []string) []*regexp.Regexp {
-	ret := make([]*regexp.Regexp, 0, len(arr))
+func compileStringsByRegexp(arr []*StringMatch) error {
 	for _, s := range arr {
-		p, err := regexp.Compile(s)
-		if err != nil {
-			continue
+		if err := s.Compile(); err != nil {
+			return err
 		}
-		ret = append(ret, p)
+		if err := s.Validate(); err != nil {
+			return err
+		}
 	}
-	return ret
+	return nil
 }
 
 func (mc *Match) Compile() error {
-	mc.CompiledBranches = compileStringsByRegexp(mc.Branches)
-	mc.CompiledTags = compileStringsByRegexp(mc.Tags)
-	mc.CompiledPaths = compileStringsByRegexp(mc.Paths)
-	mc.CompiledBranchesIgnore = compileStringsByRegexp(mc.BranchesIgnore)
-	mc.CompiledTagsIgnore = compileStringsByRegexp(mc.TagsIgnore)
-	mc.CompiledPathsIgnore = compileStringsByRegexp(mc.PathsIgnore)
+	if err := compileStringsByRegexp(mc.Branches); err != nil {
+		return err
+	}
+	if err := compileStringsByRegexp(mc.Tags); err != nil {
+		return err
+	}
+	if err := compileStringsByRegexp(mc.Paths); err != nil {
+		return err
+	}
+	if err := compileStringsByRegexp(mc.BranchesIgnore); err != nil {
+		return err
+	}
+	if err := compileStringsByRegexp(mc.TagsIgnore); err != nil {
+		return err
+	}
+	if err := compileStringsByRegexp(mc.PathsIgnore); err != nil {
+		return err
+	}
 	return nil
 }
 
