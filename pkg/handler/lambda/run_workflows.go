@@ -2,10 +2,9 @@ package lambda
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
@@ -14,80 +13,34 @@ import (
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) getWorkflowInput(ctx context.Context, logger *zap.Logger, gh *github.Client, body interface{}, repo *github.Repository) (map[string]interface{}, *Response) { //nolint:cyclop
-	repoOwner := repo.GetOwner().GetLogin()
-	repoName := repo.GetName()
+type WorkflowInput struct {
+	// https://docs.github.com/en/actions/learn-github-actions/contexts
+	Event        interface{}          `json:"event"`
+	EventName    string               `json:"event_name"`
+	ChangedFiles []*github.CommitFile `json:"changed_files,omitempty"`
+}
 
-	ref := ""
-	sha := ""
-	mergedCommitSHA := ""
-	prNumber := 0
-	switch ev := body.(type) {
-	case *github.PullRequestTargetEvent:
-		base := ev.GetPullRequest().GetBase()
-		ref = base.GetRef()
-		sha = base.GetSHA()
-		prNumber = ev.GetNumber()
-	case *github.PushEvent:
-		ref = ev.GetRef()
-		sha = ev.GetAfter()
-	case *github.ReleaseEvent:
-		release := ev.GetRelease()
-		ref = fmt.Sprintf("refs/tags/%s", release.GetTagName())
-		// TODO sha
-	case *github.StatusEvent:
-		// ref n/a
-		sha = ev.GetSHA()
-	default:
-		if hasRef, ok := body.(domain.HasRef); ok {
-			ref = hasRef.GetRef()
-		} else if hasDeployment, ok := body.(domain.HasDeployment); ok {
-			deploy := hasDeployment.GetDeployment()
-			ref = deploy.GetRef()
-			sha = deploy.GetSHA()
-		} else if hasPR, ok := body.(domain.HasPR); ok {
-			// https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
-			// sha: Last merge commit on the GITHUB_REF branch
-			// ref: PR merge branch refs/pull/:prNumber/merge
-			pr, err := handler.waitPRMergeable(ctx, gh, hasPR.GetPullRequest(), repoOwner, repoName)
-			if err != nil {
-				logger.Error(
-					"wait until pull request's mergeable becomes not nil",
-					zap.Error(err))
-				return nil, &Response{
-					StatusCode: http.StatusInternalServerError,
-					Body: map[string]interface{}{
-						"error": "Internal Server Error",
-					},
-				}
-			}
-			if !pr.GetMergeable() {
-				return nil, &Response{
-					StatusCode: http.StatusBadRequest,
-					Body: map[string]interface{}{
-						"error": "pull_request isn't mergeable",
-					},
-				}
-			}
-			ref = fmt.Sprintf("refs/pull/%v/merge", pr.GetNumber())
-			mergedCommitSHA = pr.GetMergeCommitSHA()
-			sha = pr.GetHead().GetSHA()
-			prNumber = pr.GetNumber()
+func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *Event) (map[string]interface{}, *Response) {
+	body := ev.Body
+	input := &WorkflowInput{
+		Event:        body,
+		EventName:    ev.Type,
+		ChangedFiles: ev.ChangedFileObjs,
+	}
+
+	b, err := json.Marshal(input)
+	if err != nil {
+		logger.Error("marshal input as JSON", zap.Error(err))
+		return nil, &Response{
+			StatusCode: http.StatusInternalServerError,
+			Body: map[string]interface{}{
+				"error": "Internal Server Error",
+			},
 		}
-		// TODO go-github doesn't support registry_package event
 	}
-	if mergedCommitSHA == "" {
-		mergedCommitSHA = sha
-	}
-	m := map[string]interface{}{
-		"ref":               ref,
-		"sha":               sha,
-		"merged_commit_sha": mergedCommitSHA,
-	}
-	if prNumber != 0 {
-		m["pr_number"] = strconv.Itoa(prNumber)
-	}
-	return m, nil
+	return map[string]interface{}{
+		"data": string(b),
+	}, nil
 }
 
 func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev *Event, repoCfg *config.Repo, workflows []*config.Workflow) (*Response, error) {
@@ -95,13 +48,38 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 		logger.Info("no workflow is run")
 		return nil, nil //nolint:nilnil
 	}
+
 	repo := ev.Repo
 	body := ev.Body
-
 	repoOwner := repo.GetOwner().GetLogin()
 	repoName := repo.GetName()
+	if hasPR, ok := body.(domain.HasPR); ok {
+		// https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+		// sha: Last merge commit on the GITHUB_REF branch
+		// ref: PR merge branch refs/pull/:prNumber/merge
+		pr, err := handler.waitPRMergeable(ctx, gh, hasPR.GetPullRequest(), repoOwner, repoName)
+		if err != nil {
+			logger.Error(
+				"wait until pull request's mergeable becomes not nil",
+				zap.Error(err))
+			return &Response{
+				StatusCode: http.StatusInternalServerError,
+				Body: map[string]interface{}{
+					"error": "Internal Server Error",
+				},
+			}, nil
+		}
+		if !pr.GetMergeable() {
+			return &Response{
+				StatusCode: http.StatusBadRequest,
+				Body: map[string]interface{}{
+					"error": "pull_request isn't mergeable",
+				},
+			}, nil
+		}
+	}
 
-	input, resp := handler.getWorkflowInput(ctx, logger, gh, body, repo)
+	inputs, resp := handler.getWorkflowInput(logger, ev)
 	if resp != nil {
 		return resp, nil
 	}
@@ -110,16 +88,6 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 	for i := 0; i < numWorkflows; i++ {
 		workflow := workflows[i]
 		// Run GitHub Actions Workflow
-		inputs := make(map[string]interface{}, len(workflow.Inputs))
-		for k, v := range workflow.Inputs {
-			inputs[k] = v
-		}
-		inputs["payload"] = ev.Request.Body
-		inputs["repo_owner"] = repoOwner
-		inputs["repo_name"] = repoName
-		for k, v := range input {
-			inputs[k] = v
-		}
 		logger := logger.With(
 			zap.String("workflow_repo_owner", repoCfg.RepoOwner),
 			zap.String("workflow_repo_name", repoCfg.CIRepoName),

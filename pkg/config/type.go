@@ -108,7 +108,6 @@ type Match struct {
 type Workflow struct {
 	WorkflowFileName string `yaml:"workflow_file_name"`
 	Ref              string
-	Inputs           map[string]interface{}
 	GitHub           *github.Client `yaml:"-"`
 }
 
