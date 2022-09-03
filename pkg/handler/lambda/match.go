@@ -1,7 +1,6 @@
 package lambda
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
@@ -89,7 +88,7 @@ func (handler *Handler) matchEventType(matchConfig *config.Match, event *Event) 
 	return false, nil, nil
 }
 
-func (handler *Handler) matchBranches(matchConfig *config.Match, event *Event) (bool, *Response, error) { //nolint:cyclop
+func (handler *Handler) matchBranches(matchConfig *config.Match, event *Event) (bool, *Response, error) {
 	if len(matchConfig.Branches) == 0 {
 		return true, nil, nil
 	}
@@ -99,12 +98,11 @@ func (handler *Handler) matchBranches(matchConfig *config.Match, event *Event) (
 		base := pr.GetBase()
 		ref := base.GetRef()
 		for _, branch := range matchConfig.Branches {
-			if ref == branch {
-				return true, nil, nil
+			f, err := branch.Match(ref)
+			if err != nil {
+				return false, nil, err
 			}
-		}
-		for _, branch := range matchConfig.CompiledBranches {
-			if branch.MatchString(ref) {
+			if f {
 				return true, nil, nil
 			}
 		}
@@ -113,12 +111,11 @@ func (handler *Handler) matchBranches(matchConfig *config.Match, event *Event) (
 	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/heads/")
 		for _, branch := range matchConfig.Branches {
-			if ref == branch {
-				return true, nil, nil
+			f, err := branch.Match(ref)
+			if err != nil {
+				return false, nil, err
 			}
-		}
-		for _, branch := range matchConfig.CompiledBranches {
-			if branch.MatchString(ref) {
+			if f {
 				return true, nil, nil
 			}
 		}
@@ -135,12 +132,11 @@ func (handler *Handler) matchTags(matchConfig *config.Match, event *Event) (bool
 	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/tags/")
 		for _, tag := range matchConfig.Tags {
-			if ref == tag {
-				return true, nil, nil
+			f, err := tag.Match(ref)
+			if err != nil {
+				return false, nil, err
 			}
-		}
-		for _, tag := range matchConfig.CompiledTags {
-			if tag.MatchString(ref) {
+			if f {
 				return true, nil, nil
 			}
 		}
@@ -155,12 +151,11 @@ func (handler *Handler) matchPaths(matchConfig *config.Match, event *Event) (boo
 	}
 	for _, changedFile := range event.ChangedFiles {
 		for _, p := range matchConfig.Paths {
-			if changedFile == p {
-				return true, nil, nil
+			f, err := p.Match(changedFile)
+			if err != nil {
+				return false, nil, err
 			}
-		}
-		for _, p := range matchConfig.CompiledPaths {
-			if p.MatchString(changedFile) {
+			if f {
 				return true, nil, nil
 			}
 		}
@@ -168,7 +163,7 @@ func (handler *Handler) matchPaths(matchConfig *config.Match, event *Event) (boo
 	return false, nil, nil
 }
 
-func (handler *Handler) matchBranchesIgnore(matchConfig *config.Match, event *Event) (bool, *Response, error) { //nolint:cyclop
+func (handler *Handler) matchBranchesIgnore(matchConfig *config.Match, event *Event) (bool, *Response, error) {
 	if len(matchConfig.BranchesIgnore) == 0 {
 		return true, nil, nil
 	}
@@ -178,12 +173,11 @@ func (handler *Handler) matchBranchesIgnore(matchConfig *config.Match, event *Ev
 		base := pr.GetBase()
 		ref := base.GetRef()
 		for _, branch := range matchConfig.Branches {
-			if ref == branch {
-				return false, nil, nil
+			f, err := branch.Match(ref)
+			if err != nil {
+				return false, nil, err
 			}
-		}
-		for _, branch := range matchConfig.CompiledBranches {
-			if branch.MatchString(ref) {
+			if f {
 				return false, nil, nil
 			}
 		}
@@ -192,12 +186,11 @@ func (handler *Handler) matchBranchesIgnore(matchConfig *config.Match, event *Ev
 	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/heads/")
 		for _, branch := range matchConfig.Branches {
-			if ref == branch {
-				return false, nil, nil
+			f, err := branch.Match(ref)
+			if err != nil {
+				return false, nil, err
 			}
-		}
-		for _, branch := range matchConfig.CompiledBranches {
-			if branch.MatchString(ref) {
+			if f {
 				return false, nil, nil
 			}
 		}
@@ -214,12 +207,11 @@ func (handler *Handler) matchTagsIgnore(matchConfig *config.Match, event *Event)
 	if hasRef, ok := payload.(domain.HasRef); ok {
 		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/tags/")
 		for _, tag := range matchConfig.Tags {
-			if ref == tag {
-				return false, nil, nil
+			f, err := tag.Match(ref)
+			if err != nil {
+				return false, nil, err
 			}
-		}
-		for _, tag := range matchConfig.CompiledTags {
-			if tag.MatchString(ref) {
+			if f {
 				return false, nil, nil
 			}
 		}
@@ -233,25 +225,28 @@ func (handler *Handler) matchPathsIgnore(matchConfig *config.Match, event *Event
 		return true, nil, nil
 	}
 	for _, changedFile := range event.ChangedFiles {
-		if !matchPath(changedFile, matchConfig.PathsIgnore, matchConfig.CompiledPaths) {
+		f, err := matchPath(changedFile, matchConfig.PathsIgnore)
+		if err != nil {
+			return false, nil, err
+		}
+		if !f {
 			return true, nil, nil
 		}
 	}
 	return false, nil, nil
 }
 
-func matchPath(changedFile string, paths []string, compiledPaths []*regexp.Regexp) bool {
+func matchPath(changedFile string, paths []*config.StringMatch) (bool, error) {
 	for _, p := range paths {
-		if changedFile == p {
-			return true
+		f, err := p.Match(changedFile)
+		if err != nil {
+			return false, err
+		}
+		if f {
+			return true, nil
 		}
 	}
-	for _, p := range compiledPaths {
-		if p.MatchString(changedFile) {
-			return true
-		}
-	}
-	return false
+	return false, nil
 }
 
 func (handler *Handler) matchIf(matchConfig *config.Match, event *Event) (bool, *Response, error) {

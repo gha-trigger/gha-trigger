@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"regexp"
 
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/aws"
 	"github.com/suzuki-shunsuke/gha-trigger/pkg/config"
@@ -71,7 +70,9 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 	if err := yaml.Unmarshal([]byte(osEnv.Getenv("CONFIG")), cfg); err != nil {
 		return nil, fmt.Errorf("parse the configuration as YAML: %w", err)
 	}
-	initCfg(cfg)
+	if err := initCfg(cfg); err != nil {
+		return nil, fmt.Errorf("initialize configuration: %w", err)
+	}
 	// read env
 	// read secret
 	awsClient := aws.New(cfg.AWS)
@@ -113,11 +114,13 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 	}, nil
 }
 
-func initCfg(cfg *config.Config) {
-	compileCfg(cfg)
+func initCfg(cfg *config.Config) error {
 	for _, repo := range cfg.Repos {
 		for _, event := range repo.Events {
 			for _, match := range event.Matches {
+				if err := match.Compile(); err != nil {
+					return err
+				}
 				for _, ev := range match.Events {
 					if ev.Name == "pull_request" && ev.Types == nil {
 						// https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
@@ -129,34 +132,5 @@ func initCfg(cfg *config.Config) {
 			}
 		}
 	}
-}
-
-func compileCfg(cfg *config.Config) {
-	for _, repo := range cfg.Repos {
-		for _, event := range repo.Events {
-			for _, match := range event.Matches {
-				match.CompiledBranches = compileStrings(match.Branches)
-				match.CompiledTags = compileStrings(match.Tags)
-				match.CompiledPaths = compileStrings(match.Paths)
-				match.CompiledBranchesIgnore = compileStrings(match.BranchesIgnore)
-				match.CompiledTagsIgnore = compileStrings(match.TagsIgnore)
-				match.CompiledPathsIgnore = compileStrings(match.PathsIgnore)
-			}
-		}
-	}
-}
-
-func compileStrings(list []string) []*regexp.Regexp {
-	n := len(list)
-	if n == 0 {
-		return nil
-	}
-	arr := make([]*regexp.Regexp, 0, n)
-	for _, branch := range list {
-		c, err := regexp.Compile(branch)
-		if err == nil {
-			arr = append(arr, c)
-		}
-	}
-	return arr
+	return nil
 }
