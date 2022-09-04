@@ -21,9 +21,8 @@ type WorkflowInput struct {
 }
 
 func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *domain.Event) (map[string]interface{}, *domain.Response) {
-	body := ev.Body
 	input := &WorkflowInput{
-		Event:        body,
+		Event:        ev.Raw,
 		EventName:    ev.Type,
 		ChangedFiles: ev.ChangedFileObjs,
 	}

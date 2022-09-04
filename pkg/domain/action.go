@@ -36,6 +36,7 @@ type HasDeployment interface {
 
 type Event struct {
 	Body            interface{}
+	Raw             map[string]interface{}
 	ChangedFiles    []string
 	ChangedFileObjs []*github.CommitFile
 	Repo            *github.Repository
