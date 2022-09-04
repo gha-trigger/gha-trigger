@@ -6,29 +6,11 @@ import (
 	"strings"
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
+	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/route"
 	"go.uber.org/zap"
 )
-
-type Event struct {
-	Body            interface{}
-	ChangedFiles    []string
-	ChangedFileObjs []*github.CommitFile
-	Repo            *github.Repository
-	Type            string
-	Action          string
-	Request         *Request
-}
-
-type Response struct {
-	StatusCode int              `json:"statusCode"`
-	Headers    *ResponseHeaders `json:"headers"`
-	Body       interface{}      `json:"body"`
-}
-
-type ResponseHeaders struct {
-	ContentType string `json:"Content-Type"`
-}
 
 type RepoEvent interface {
 	GetRepo() *github.Repository
@@ -38,17 +20,7 @@ type HasEventType interface {
 	GetAction() string
 }
 
-type Request struct {
-	// Generate template > Method request passthrough
-	Body   string              `json:"body-json"`
-	Params *RequestParamsField `json:"params"`
-}
-
-type RequestParamsField struct {
-	Headers map[string]string `json:"header"`
-}
-
-func (handler *Handler) Do(ctx context.Context, req *Request) (*Response, error) {
+func (handler *Handler) Do(ctx context.Context, req *domain.Request) (*domain.Response, error) {
 	// func (handler *Handler) Do(ctx context.Context, e interface{}) (*Response, error) {
 	// 	logger := handler.logger
 	// 	logger.Info("start a request")
@@ -83,13 +55,13 @@ type hasAction interface {
 	GetAction() string
 }
 
-func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHubApp, ev *Event) (*Response, error) {
+func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHubApp, ev *domain.Event) (*domain.Response, error) {
 	body := ev.Body
 
 	repoEvent, ok := body.(RepoEvent)
 	if !ok {
 		logger.Info("event is ignored because a repository isn't found in the payload")
-		return &Response{
+		return &domain.Response{
 			StatusCode: http.StatusOK,
 			Body: map[string]interface{}{
 				"message": "event is ignored because a repository isn't found in the payload",
@@ -108,7 +80,7 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 		break
 	}
 	if repoCfg == nil {
-		return &Response{
+		return &domain.Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
 				"message": "repository config isn't found",
@@ -132,7 +104,7 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 
 	// route and filter request
 	// list labels and changed files
-	workflows, resp, err := handler.match(ev, repoCfg)
+	workflows, resp, err := route.Match(ev, repoCfg)
 	if err != nil {
 		return resp, err
 	}

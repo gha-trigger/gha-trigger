@@ -5,11 +5,12 @@ import (
 	"strings"
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
+	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) handleSlashCommand(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, body interface{}) (*Response, error) {
+func (handler *Handler) handleSlashCommand(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, body interface{}) (*domain.Response, error) {
 	issueCommentEvent, ok := body.(*github.IssueCommentEvent)
 	if !ok {
 		return nil, nil //nolint:nilnil

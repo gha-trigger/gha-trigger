@@ -1,4 +1,4 @@
-package lambda
+package route
 
 import (
 	"strings"
@@ -7,14 +7,14 @@ import (
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 )
 
-type matchFunc func(matchConfig *config.Match, event *Event) (bool, *Response, error)
+type matchFunc func(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error)
 
-func (handler *Handler) match(event *Event, repo *config.Repo) ([]*config.Workflow, *Response, error) {
+func Match(event *domain.Event, repo *config.Repo) ([]*config.Workflow, *domain.Response, error) {
 	numEvents := len(repo.Events)
 	var wfs []*config.Workflow
 	for i := 0; i < numEvents; i++ {
 		ev := repo.Events[i]
-		f, resp, err := handler.matchEvent(ev, event)
+		f, resp, err := matchEvent(ev, event)
 		if err != nil {
 			return nil, resp, err
 		}
@@ -25,12 +25,12 @@ func (handler *Handler) match(event *Event, repo *config.Repo) ([]*config.Workfl
 	return wfs, nil, nil
 }
 
-func (handler *Handler) matchEvent(ev *config.Event, event *Event) (bool, *Response, error) {
+func matchEvent(ev *config.Event, event *domain.Event) (bool, *domain.Response, error) {
 	if len(ev.Matches) == 0 {
 		return true, nil, nil
 	}
 	for _, matchConfig := range ev.Matches {
-		f, resp, err := handler.matchMatchConfig(matchConfig, event)
+		f, resp, err := matchMatchConfig(matchConfig, event)
 		if err != nil {
 			return false, resp, err
 		}
@@ -42,18 +42,18 @@ func (handler *Handler) matchEvent(ev *config.Event, event *Event) (bool, *Respo
 	return false, nil, nil
 }
 
-func (handler *Handler) matchMatchConfig(matchConfig *config.Match, event *Event) (bool, *Response, error) {
+func matchMatchConfig(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	funcs := []matchFunc{
-		handler.matchEventType,
-		handler.matchBranches,
-		handler.matchTags,
-		handler.matchBranches,
-		handler.matchBranchesIgnore,
-		handler.matchTagsIgnore,
+		matchEventType,
+		matchBranches,
+		matchTags,
+		matchBranches,
+		matchBranchesIgnore,
+		matchTagsIgnore,
 		// check paths lastly because api call is required
-		handler.matchPaths,
-		handler.matchPathsIgnore,
-		handler.matchIf,
+		matchPaths,
+		matchPathsIgnore,
+		matchIf,
 	}
 	for _, fn := range funcs {
 		f, resp, err := fn(matchConfig, event)
@@ -68,7 +68,7 @@ func (handler *Handler) matchMatchConfig(matchConfig *config.Match, event *Event
 	return true, nil, nil
 }
 
-func (handler *Handler) matchEventType(matchConfig *config.Match, event *Event) (bool, *Response, error) {
+func matchEventType(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Events) == 0 {
 		return true, nil, nil
 	}
@@ -88,7 +88,7 @@ func (handler *Handler) matchEventType(matchConfig *config.Match, event *Event) 
 	return false, nil, nil
 }
 
-func (handler *Handler) matchBranches(matchConfig *config.Match, event *Event) (bool, *Response, error) {
+func matchBranches(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Branches) == 0 {
 		return true, nil, nil
 	}
@@ -124,7 +124,7 @@ func (handler *Handler) matchBranches(matchConfig *config.Match, event *Event) (
 	return false, nil, nil
 }
 
-func (handler *Handler) matchTags(matchConfig *config.Match, event *Event) (bool, *Response, error) {
+func matchTags(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
@@ -145,7 +145,7 @@ func (handler *Handler) matchTags(matchConfig *config.Match, event *Event) (bool
 	return false, nil, nil
 }
 
-func (handler *Handler) matchPaths(matchConfig *config.Match, event *Event) (bool, *Response, error) {
+func matchPaths(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Paths) == 0 {
 		return true, nil, nil
 	}
@@ -163,7 +163,7 @@ func (handler *Handler) matchPaths(matchConfig *config.Match, event *Event) (boo
 	return false, nil, nil
 }
 
-func (handler *Handler) matchBranchesIgnore(matchConfig *config.Match, event *Event) (bool, *Response, error) {
+func matchBranchesIgnore(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.BranchesIgnore) == 0 {
 		return true, nil, nil
 	}
@@ -199,7 +199,7 @@ func (handler *Handler) matchBranchesIgnore(matchConfig *config.Match, event *Ev
 	return true, nil, nil
 }
 
-func (handler *Handler) matchTagsIgnore(matchConfig *config.Match, event *Event) (bool, *Response, error) {
+func matchTagsIgnore(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
@@ -220,7 +220,7 @@ func (handler *Handler) matchTagsIgnore(matchConfig *config.Match, event *Event)
 	return true, nil, nil
 }
 
-func (handler *Handler) matchPathsIgnore(matchConfig *config.Match, event *Event) (bool, *Response, error) {
+func matchPathsIgnore(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.PathsIgnore) == 0 {
 		return true, nil, nil
 	}
@@ -249,7 +249,7 @@ func matchPath(changedFile string, paths []*config.StringMatch) (bool, error) {
 	return false, nil
 }
 
-func (handler *Handler) matchIf(matchConfig *config.Match, event *Event) (bool, *Response, error) {
+func matchIf(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	// TODO
 	return true, nil, nil
 }
