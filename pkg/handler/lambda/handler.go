@@ -104,7 +104,7 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 
 	// route and filter request
 	// list labels and changed files
-	workflows, resp, err := route.Match(ev, repoCfg)
+	workflows, resp, err := route.Match(ctx, ev, repoCfg)
 	if err != nil {
 		return resp, err
 	}

@@ -87,5 +87,6 @@ func (handler *Handler) validate(logger *zap.Logger, req *domain.Request) (*GitH
 		Body:    body,
 		Type:    evType,
 		Request: req,
+		GitHub:  ghApp.Client,
 	}, nil
 }

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/gha-trigger/gha-trigger/pkg/github"
 )
@@ -40,6 +41,40 @@ type Event struct {
 	Type            string
 	Action          string
 	Request         *Request
+	GitHub          *github.Client
+}
+
+func getChangedFiles(files []*github.CommitFile) []string {
+	changedFileMap := make(map[string]struct{}, len(files))
+	for _, file := range files {
+		if f := file.GetFilename(); f != "" {
+			changedFileMap[f] = struct{}{}
+		}
+		if f := file.GetPreviousFilename(); f != "" {
+			changedFileMap[f] = struct{}{}
+		}
+	}
+	changedFiles := make([]string, 0, len(changedFileMap))
+	for k := range changedFileMap {
+		changedFiles = append(changedFiles, k)
+	}
+	return changedFiles
+}
+
+func (ev *Event) GetChangedFiles(ctx context.Context) ([]string, error) {
+	if ev.ChangedFileObjs == nil {
+		switch ev.Type {
+		case "pull_request", "pull_request_target":
+			files, _, err := ev.GitHub.ListPRFiles(ctx, &github.ParamsListPRFiles{})
+			if err != nil {
+				return nil, fmt.Errorf("list pull request files: %w", err)
+			}
+			ev.ChangedFileObjs = files
+			ev.ChangedFiles = getChangedFiles(files)
+		default:
+		}
+	}
+	return ev.ChangedFiles, nil
 }
 
 type Request struct {

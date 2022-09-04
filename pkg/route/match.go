@@ -1,20 +1,21 @@
 package route
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 )
 
-type matchFunc func(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error)
+type matchFunc func(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error)
 
-func Match(event *domain.Event, repo *config.Repo) ([]*config.Workflow, *domain.Response, error) {
+func Match(ctx context.Context, event *domain.Event, repo *config.Repo) ([]*config.Workflow, *domain.Response, error) {
 	numEvents := len(repo.Events)
 	var wfs []*config.Workflow
 	for i := 0; i < numEvents; i++ {
 		ev := repo.Events[i]
-		f, resp, err := matchEvent(ev, event)
+		f, resp, err := matchEvent(ctx, ev, event)
 		if err != nil {
 			return nil, resp, err
 		}
@@ -25,12 +26,12 @@ func Match(event *domain.Event, repo *config.Repo) ([]*config.Workflow, *domain.
 	return wfs, nil, nil
 }
 
-func matchEvent(ev *config.Event, event *domain.Event) (bool, *domain.Response, error) {
+func matchEvent(ctx context.Context, ev *config.Event, event *domain.Event) (bool, *domain.Response, error) {
 	if len(ev.Matches) == 0 {
 		return true, nil, nil
 	}
 	for _, matchConfig := range ev.Matches {
-		f, resp, err := matchMatchConfig(matchConfig, event)
+		f, resp, err := matchMatchConfig(ctx, matchConfig, event)
 		if err != nil {
 			return false, resp, err
 		}
@@ -42,7 +43,7 @@ func matchEvent(ev *config.Event, event *domain.Event) (bool, *domain.Response, 
 	return false, nil, nil
 }
 
-func matchMatchConfig(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchMatchConfig(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	funcs := []matchFunc{
 		matchEventType,
 		matchBranches,
@@ -56,7 +57,7 @@ func matchMatchConfig(matchConfig *config.Match, event *domain.Event) (bool, *do
 		matchIf,
 	}
 	for _, fn := range funcs {
-		f, resp, err := fn(matchConfig, event)
+		f, resp, err := fn(ctx, matchConfig, event)
 		if err != nil {
 			return false, resp, err
 		}
@@ -68,7 +69,7 @@ func matchMatchConfig(matchConfig *config.Match, event *domain.Event) (bool, *do
 	return true, nil, nil
 }
 
-func matchEventType(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchEventType(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Events) == 0 {
 		return true, nil, nil
 	}
@@ -88,7 +89,7 @@ func matchEventType(matchConfig *config.Match, event *domain.Event) (bool, *doma
 	return false, nil, nil
 }
 
-func matchBranches(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchBranches(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Branches) == 0 {
 		return true, nil, nil
 	}
@@ -124,7 +125,7 @@ func matchBranches(matchConfig *config.Match, event *domain.Event) (bool, *domai
 	return false, nil, nil
 }
 
-func matchTags(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchTags(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
@@ -145,11 +146,15 @@ func matchTags(matchConfig *config.Match, event *domain.Event) (bool, *domain.Re
 	return false, nil, nil
 }
 
-func matchPaths(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchPaths(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Paths) == 0 {
 		return true, nil, nil
 	}
-	for _, changedFile := range event.ChangedFiles {
+	changedFiles, err := event.GetChangedFiles(ctx)
+	if err != nil {
+		return false, nil, err
+	}
+	for _, changedFile := range changedFiles {
 		for _, p := range matchConfig.Paths {
 			f, err := p.Match(changedFile)
 			if err != nil {
@@ -163,7 +168,7 @@ func matchPaths(matchConfig *config.Match, event *domain.Event) (bool, *domain.R
 	return false, nil, nil
 }
 
-func matchBranchesIgnore(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchBranchesIgnore(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.BranchesIgnore) == 0 {
 		return true, nil, nil
 	}
@@ -199,7 +204,7 @@ func matchBranchesIgnore(matchConfig *config.Match, event *domain.Event) (bool, 
 	return true, nil, nil
 }
 
-func matchTagsIgnore(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchTagsIgnore(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
@@ -220,11 +225,15 @@ func matchTagsIgnore(matchConfig *config.Match, event *domain.Event) (bool, *dom
 	return true, nil, nil
 }
 
-func matchPathsIgnore(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchPathsIgnore(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	if len(matchConfig.PathsIgnore) == 0 {
 		return true, nil, nil
 	}
-	for _, changedFile := range event.ChangedFiles {
+	changedFiles, err := event.GetChangedFiles(ctx)
+	if err != nil {
+		return false, nil, err
+	}
+	for _, changedFile := range changedFiles {
 		f, err := matchPath(changedFile, matchConfig.PathsIgnore)
 		if err != nil {
 			return false, nil, err
@@ -249,7 +258,7 @@ func matchPath(changedFile string, paths []*config.StringMatch) (bool, error) {
 	return false, nil
 }
 
-func matchIf(matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchIf(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
 	// TODO
 	return true, nil, nil
 }
