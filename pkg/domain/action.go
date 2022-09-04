@@ -31,3 +31,33 @@ type HasRef interface {
 type HasDeployment interface {
 	GetDeployment() *github.Deployment
 }
+
+type Event struct {
+	Body            interface{}
+	ChangedFiles    []string
+	ChangedFileObjs []*github.CommitFile
+	Repo            *github.Repository
+	Type            string
+	Action          string
+	Request         *Request
+}
+
+type Request struct {
+	// Generate template > Method request passthrough
+	Body   string              `json:"body-json"`
+	Params *RequestParamsField `json:"params"`
+}
+
+type RequestParamsField struct {
+	Headers map[string]string `json:"header"`
+}
+
+type Response struct {
+	StatusCode int              `json:"statusCode"`
+	Headers    *ResponseHeaders `json:"headers"`
+	Body       interface{}      `json:"body"`
+}
+
+type ResponseHeaders struct {
+	ContentType string `json:"Content-Type"`
+}

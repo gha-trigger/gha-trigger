@@ -9,24 +9,6 @@ import (
 	"github.com/gha-trigger/gha-trigger/pkg/github"
 )
 
-/*
-e.g.
-
-events:
-- matches:
-  - repo_owner: suzuki-shunsuke
-    repo_name: suzuki-shunsuke
-    events: ["pull_request"]
-    branches: ["main"]
-  workflows:
-  - repo_owner: suzuki-shunsuke
-    repo_name: tfcmt-ci
-    workflow_file_name: test.yaml
-    ref: main
-    inputs:
-      event: foo
-*/
-
 type Config struct {
 	AWS        *AWS         `yaml:"aws"`
 	GitHubApps []*GitHubApp `yaml:"github_apps"`

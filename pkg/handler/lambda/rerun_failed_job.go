@@ -5,15 +5,16 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*Response, error) {
+func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*domain.Response, error) {
 	// /rerun-failed-job <workflow id> [<workflow id> ...]
 	words := strings.Split(strings.TrimSpace(cmtBody), " ")
 	if len(words) < 2 { //nolint:gomnd
-		return &Response{
+		return &domain.Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
 				"error": "workflow ids are required",
@@ -21,7 +22,7 @@ func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger,
 		}, nil
 	}
 	var gErr error
-	resp := &Response{
+	resp := &domain.Response{
 		StatusCode: http.StatusOK,
 		Body: map[string]interface{}{
 			"message": "failed jobs are rerun",
@@ -43,7 +44,7 @@ func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger,
 				"rerun failed jobs", zap.Error(err),
 				zap.Int("status_code", res.StatusCode),
 			)
-			resp = &Response{
+			resp = &domain.Response{
 				StatusCode: http.StatusInternalServerError,
 				Body: map[string]interface{}{
 					"message": "failed to rerun failed jobs",

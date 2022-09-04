@@ -20,7 +20,7 @@ type WorkflowInput struct {
 	ChangedFiles []*github.CommitFile `json:"changed_files,omitempty"`
 }
 
-func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *Event) (map[string]interface{}, *Response) {
+func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *domain.Event) (map[string]interface{}, *domain.Response) {
 	body := ev.Body
 	input := &WorkflowInput{
 		Event:        body,
@@ -31,7 +31,7 @@ func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *Event) (map[str
 	b, err := json.Marshal(input)
 	if err != nil {
 		logger.Error("marshal input as JSON", zap.Error(err))
-		return nil, &Response{
+		return nil, &domain.Response{
 			StatusCode: http.StatusInternalServerError,
 			Body: map[string]interface{}{
 				"error": "Internal Server Error",
@@ -43,7 +43,7 @@ func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *Event) (map[str
 	}, nil
 }
 
-func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev *Event, repoCfg *config.Repo, workflows []*config.Workflow) (*Response, error) {
+func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev *domain.Event, repoCfg *config.Repo, workflows []*config.Workflow) (*domain.Response, error) {
 	if len(workflows) == 0 {
 		logger.Info("no workflow is run")
 		return nil, nil //nolint:nilnil
@@ -62,7 +62,7 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 			logger.Error(
 				"wait until pull request's mergeable becomes not nil",
 				zap.Error(err))
-			return &Response{
+			return &domain.Response{
 				StatusCode: http.StatusInternalServerError,
 				Body: map[string]interface{}{
 					"error": "Internal Server Error",
@@ -70,7 +70,7 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 			}, nil
 		}
 		if !pr.GetMergeable() {
-			return &Response{
+			return &domain.Response{
 				StatusCode: http.StatusBadRequest,
 				Body: map[string]interface{}{
 					"error": "pull_request isn't mergeable",
