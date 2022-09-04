@@ -38,6 +38,7 @@ func (handler *Handler) Do(ctx context.Context, req *domain.Request) (*domain.Re
 	if resp != nil {
 		return resp, nil
 	}
+	logger = logger.With(zap.String("event_type", ev.Type))
 
 	return handler.do(ctx, logger, ghApp, ev)
 }
