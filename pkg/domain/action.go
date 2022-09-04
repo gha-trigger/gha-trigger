@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/gha-trigger/gha-trigger/pkg/github"
@@ -65,7 +66,17 @@ func (ev *Event) GetChangedFiles(ctx context.Context) ([]string, error) {
 	if ev.ChangedFileObjs == nil {
 		switch ev.Type {
 		case "pull_request", "pull_request_target":
-			files, _, err := ev.GitHub.ListPRFiles(ctx, &github.ParamsListPRFiles{})
+			hasPR, ok := ev.Body.(HasPR)
+			if !ok {
+				return nil, errors.New("body must be HasPR")
+			}
+			pr := hasPR.GetPullRequest()
+			files, _, err := ev.GitHub.ListPRFiles(ctx, &github.ParamsListPRFiles{
+				Owner:  ev.Repo.GetOwner().GetLogin(),
+				Repo:   ev.Repo.GetName(),
+				Number: pr.GetNumber(),
+				Count:  pr.GetChangedFiles(),
+			})
 			if err != nil {
 				return nil, fmt.Errorf("list pull request files: %w", err)
 			}
