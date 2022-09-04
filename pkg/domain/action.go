@@ -96,7 +96,6 @@ type ResponseHeaders struct {
 }
 
 type Payload struct {
-	Sender      *github.User        `json:"sender"`
 	Repo        *github.Repository  `json:"repository"`
 	PullRequest *github.PullRequest `json:"pull_request"`
 	Ref         string              `json:"ref"`
