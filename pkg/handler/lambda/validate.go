@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
@@ -83,8 +84,21 @@ func (handler *Handler) validate(logger *zap.Logger, req *domain.Request) (*GitH
 			},
 		}
 	}
+
+	raw := map[string]interface{}{}
+	if err := json.Unmarshal(bodyB, &raw); err != nil {
+		logger.Warn("parse a webhook payload", zap.Error(err))
+		return nil, nil, &domain.Response{
+			StatusCode: http.StatusBadRequest,
+			Body: map[string]interface{}{
+				"error": "failed to parse a webhook payload",
+			},
+		}
+	}
+
 	return ghApp, &domain.Event{
 		Body:    body,
+		Raw:     raw,
 		Type:    evType,
 		Request: req,
 		GitHub:  ghApp.Client,
