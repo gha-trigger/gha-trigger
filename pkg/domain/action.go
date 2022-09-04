@@ -22,26 +22,13 @@ type GitHub interface {
 	RerunFailedJobs(ctx context.Context, owner, repo string, runID int64) (*github.Response, error)
 }
 
-type HasPR interface {
-	GetPullRequest() *github.PullRequest
-}
-
-type HasRef interface {
-	GetRef() string
-}
-
-type HasDeployment interface {
-	GetDeployment() *github.Deployment
-}
-
 type Event struct {
 	Body            interface{}
 	Raw             map[string]interface{}
+	Payload         *Payload
 	ChangedFiles    []string
 	ChangedFileObjs []*github.CommitFile
-	Repo            *github.Repository
 	Type            string
-	Action          string
 	Request         *Request
 	GitHub          *github.Client
 }
@@ -67,14 +54,13 @@ func (ev *Event) GetChangedFiles(ctx context.Context) ([]string, error) {
 	if ev.ChangedFileObjs == nil {
 		switch ev.Type {
 		case "pull_request", "pull_request_target":
-			hasPR, ok := ev.Body.(HasPR)
-			if !ok {
-				return nil, errors.New("body must be HasPR")
+			if ev.Payload.PullRequest == nil {
+				return nil, errors.New("body must have a pull request")
 			}
-			pr := hasPR.GetPullRequest()
+			pr := ev.Payload.PullRequest
 			files, _, err := ev.GitHub.ListPRFiles(ctx, &github.ParamsListPRFiles{
-				Owner:  ev.Repo.GetOwner().GetLogin(),
-				Repo:   ev.Repo.GetName(),
+				Owner:  ev.Payload.Repo.GetOwner().GetLogin(),
+				Repo:   ev.Payload.Repo.GetName(),
 				Number: pr.GetNumber(),
 				Count:  pr.GetChangedFiles(),
 			})
@@ -107,4 +93,12 @@ type Response struct {
 
 type ResponseHeaders struct {
 	ContentType string `json:"Content-Type"`
+}
+
+type Payload struct {
+	Sender      *github.User        `json:"sender"`
+	Repo        *github.Repository  `json:"repository"`
+	PullRequest *github.PullRequest `json:"pull_request"`
+	Ref         string              `json:"ref"`
+	Action      string              `json:"action"`
 }

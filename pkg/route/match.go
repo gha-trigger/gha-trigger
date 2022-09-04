@@ -81,7 +81,7 @@ func matchEventType(ctx context.Context, matchConfig *config.Match, event *domai
 			return true, nil, nil
 		}
 		for _, typ := range ev.Types {
-			if typ == event.Action {
+			if typ == event.Payload.Action {
 				return true, nil, nil
 			}
 		}
@@ -93,10 +93,8 @@ func matchBranches(ctx context.Context, matchConfig *config.Match, event *domain
 	if len(matchConfig.Branches) == 0 {
 		return true, nil, nil
 	}
-	payload := event.Body
-	if hasPR, ok := payload.(domain.HasPR); ok {
-		pr := hasPR.GetPullRequest()
-		base := pr.GetBase()
+	if event.Payload.PullRequest != nil {
+		base := event.Payload.PullRequest.GetBase()
 		ref := base.GetRef()
 		for _, branch := range matchConfig.Branches {
 			f, err := branch.Match(ref)
@@ -109,8 +107,8 @@ func matchBranches(ctx context.Context, matchConfig *config.Match, event *domain
 		}
 		return false, nil, nil
 	}
-	if hasRef, ok := payload.(domain.HasRef); ok {
-		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/heads/")
+	if event.Payload.Ref != "" {
+		ref := strings.TrimPrefix(event.Payload.Ref, "refs/heads/")
 		for _, branch := range matchConfig.Branches {
 			f, err := branch.Match(ref)
 			if err != nil {
@@ -129,9 +127,8 @@ func matchTags(ctx context.Context, matchConfig *config.Match, event *domain.Eve
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
-	payload := event.Body
-	if hasRef, ok := payload.(domain.HasRef); ok {
-		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/tags/")
+	if event.Payload.Ref != "" {
+		ref := strings.TrimPrefix(event.Payload.Ref, "refs/tags/")
 		for _, tag := range matchConfig.Tags {
 			f, err := tag.Match(ref)
 			if err != nil {
@@ -172,10 +169,8 @@ func matchBranchesIgnore(ctx context.Context, matchConfig *config.Match, event *
 	if len(matchConfig.BranchesIgnore) == 0 {
 		return true, nil, nil
 	}
-	payload := event.Body
-	if hasPR, ok := payload.(domain.HasPR); ok {
-		pr := hasPR.GetPullRequest()
-		base := pr.GetBase()
+	if event.Payload.PullRequest != nil {
+		base := event.Payload.PullRequest.GetBase()
 		ref := base.GetRef()
 		for _, branch := range matchConfig.BranchesIgnore {
 			f, err := branch.Match(ref)
@@ -188,8 +183,8 @@ func matchBranchesIgnore(ctx context.Context, matchConfig *config.Match, event *
 		}
 		return true, nil, nil
 	}
-	if hasRef, ok := payload.(domain.HasRef); ok {
-		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/heads/")
+	if event.Payload.Ref != "" {
+		ref := strings.TrimPrefix(event.Payload.Ref, "refs/heads/")
 		for _, branch := range matchConfig.BranchesIgnore {
 			f, err := branch.Match(ref)
 			if err != nil {
@@ -208,9 +203,8 @@ func matchTagsIgnore(ctx context.Context, matchConfig *config.Match, event *doma
 	if len(matchConfig.Tags) == 0 {
 		return true, nil, nil
 	}
-	payload := event.Body
-	if hasRef, ok := payload.(domain.HasRef); ok {
-		ref := strings.TrimPrefix(hasRef.GetRef(), "refs/tags/")
+	if event.Payload.Ref != "" {
+		ref := strings.TrimPrefix(event.Payload.Ref, "refs/tags/")
 		for _, tag := range matchConfig.TagsIgnore {
 			f, err := tag.Match(ref)
 			if err != nil {
