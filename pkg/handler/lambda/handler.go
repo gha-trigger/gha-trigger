@@ -7,18 +7,9 @@ import (
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
-	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"github.com/gha-trigger/gha-trigger/pkg/route"
 	"go.uber.org/zap"
 )
-
-type RepoEvent interface {
-	GetRepo() *github.Repository
-}
-
-type HasEventType interface {
-	GetAction() string
-}
 
 func (handler *Handler) Do(ctx context.Context, req *domain.Request) (*domain.Response, error) {
 	// func (handler *Handler) Do(ctx context.Context, e interface{}) (*Response, error) {
@@ -51,15 +42,10 @@ func (handler *Handler) Do(ctx context.Context, req *domain.Request) (*domain.Re
 	return handler.do(ctx, logger, ghApp, ev)
 }
 
-type hasAction interface {
-	GetAction() string
-}
-
 func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHubApp, ev *domain.Event) (*domain.Response, error) {
 	body := ev.Body
 
-	repoEvent, ok := body.(RepoEvent)
-	if !ok {
+	if ev.Payload.Repo == nil {
 		logger.Info("event is ignored because a repository isn't found in the payload")
 		return &domain.Response{
 			StatusCode: http.StatusOK,
@@ -69,8 +55,7 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 		}, nil
 	}
 
-	ghRepo := repoEvent.GetRepo()
-	ev.Repo = ghRepo
+	ghRepo := ev.Payload.Repo
 	var repoCfg *config.Repo
 	for _, repo := range handler.cfg.Repos {
 		if repo.RepoOwner != ghRepo.GetOwner().GetLogin() || repo.RepoName != ghRepo.GetName() {
@@ -96,10 +81,6 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 
 	if resp, err := handler.handleSlashCommand(ctx, logger, repoCfg, body); resp != nil {
 		return resp, err
-	}
-
-	if actionEvent, ok := body.(hasAction); ok {
-		ev.Action = actionEvent.GetAction()
 	}
 
 	// route and filter request

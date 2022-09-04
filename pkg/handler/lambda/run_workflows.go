@@ -48,15 +48,14 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 		return nil, nil //nolint:nilnil
 	}
 
-	repo := ev.Repo
-	body := ev.Body
+	repo := ev.Payload.Repo
 	repoOwner := repo.GetOwner().GetLogin()
 	repoName := repo.GetName()
-	if hasPR, ok := body.(domain.HasPR); ok {
+	if pr := ev.Payload.PullRequest; pr != nil {
 		// https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
 		// sha: Last merge commit on the GITHUB_REF branch
 		// ref: PR merge branch refs/pull/:prNumber/merge
-		pr, err := handler.waitPRMergeable(ctx, gh, hasPR.GetPullRequest(), repoOwner, repoName)
+		pr, err := handler.waitPRMergeable(ctx, gh, pr, repoOwner, repoName)
 		if err != nil {
 			logger.Error(
 				"wait until pull request's mergeable becomes not nil",

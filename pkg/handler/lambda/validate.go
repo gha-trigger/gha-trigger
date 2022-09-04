@@ -96,11 +96,23 @@ func (handler *Handler) validate(logger *zap.Logger, req *domain.Request) (*GitH
 		}
 	}
 
+	payload := &domain.Payload{}
+	if err := json.Unmarshal(bodyB, payload); err != nil {
+		logger.Warn("parse a webhook payload", zap.Error(err))
+		return nil, nil, &domain.Response{
+			StatusCode: http.StatusBadRequest,
+			Body: map[string]interface{}{
+				"error": "failed to parse a webhook payload",
+			},
+		}
+	}
+
 	return ghApp, &domain.Event{
 		Body:    body,
 		Raw:     raw,
 		Type:    evType,
 		Request: req,
 		GitHub:  ghApp.Client,
+		Payload: payload,
 	}, nil
 }
