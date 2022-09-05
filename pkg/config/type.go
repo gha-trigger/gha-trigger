@@ -16,10 +16,10 @@ type Config struct {
 }
 
 type Repo struct {
-	RepoOwner             string `yaml:"repo_owner"`
-	RepoName              string `yaml:"repo_name"`
-	WorkflowGitHubAppName string `yaml:"workflow_github_app_name"`
-	CIRepoName            string `yaml:"ci_repo_name"`
+	RepoOwner             string `yaml:"repo_owner" validate:"required"`
+	RepoName              string `yaml:"repo_name" validate:"required"`
+	WorkflowGitHubAppName string `yaml:"workflow_github_app_name" validate:"required"`
+	CIRepoName            string `yaml:"ci_repo_name" validate:"required"`
 	Events                []*Event
 	GitHub                *github.Client `yaml:"-"`
 }
@@ -32,22 +32,22 @@ type GitHubApp struct {
 	Name           string
 	Org            string
 	User           string
-	AppID          int64 `yaml:"app_id"`
-	InstallationID int64 `json:"installation_id"`
-	Secret         *GitHubAppSecretConfig
+	AppID          int64                  `yaml:"app_id"`
+	InstallationID int64                  `json:"installation_id"`
+	Secret         *GitHubAppSecretConfig `validate:"required"`
 }
 
 type GitHubAppSecretConfig struct {
-	Type      string
-	SecretID  string `yaml:"secret_id"`
+	Type      string `validate:"required,oneof=aws_secretsmanager"`
+	SecretID  string `yaml:"secret_id" validate:"required"`
 	VersionID string `yaml:"version_id"`
 }
 
 type GitHubAppSecret struct {
 	AppID               int64  `json:"app_id"`
 	InstallationID      int64  `json:"installation_id"`
-	WebhookSecret       string `json:"webhook_secret"`
-	GitHubAppPrivateKey string `json:"github_app_private_key"`
+	WebhookSecret       string `json:"webhook_secret" validate:"required"`
+	GitHubAppPrivateKey string `json:"github_app_private_key" validate:"required"`
 }
 
 type Event struct {
@@ -57,8 +57,8 @@ type Event struct {
 }
 
 type StringMatch struct {
-	Type   string
-	Value  string
+	Type   string `validate:"required,oneof=equal contain regexp prefix suffix glob"`
+	Value  string `validate:"required"`
 	regexp *regexp.Regexp
 }
 
@@ -122,7 +122,7 @@ type Match struct {
 }
 
 type Workflow struct {
-	WorkflowFileName string `yaml:"workflow_file_name"`
+	WorkflowFileName string `yaml:"workflow_file_name" validate:"required"`
 	Ref              string
 	GitHub           *github.Client `yaml:"-"`
 }
@@ -162,6 +162,6 @@ func (mc *Match) Compile() error {
 }
 
 type EventType struct {
-	Name  string
+	Name  string `validate:"required"`
 	Types []string
 }

@@ -36,3 +36,4 @@ linters:
     - goconst
     - cyclop
     - funlen
+    - contextcheck
