@@ -28,21 +28,6 @@ type AWS struct {
 	Region string
 }
 
-type SecretsManager struct {
-	SecretID  string
-	VersionID string
-}
-
-// type GlobalSecret struct {
-// 	WebhookSecret string `json:"webhook_secret"`
-// }
-
-// type WebhookSecret struct {
-// 	SourceType string `yaml:"source_type"`
-// 	Region     string
-// 	SecretID   string `yaml:"secret_id"`
-// }
-
 type GitHubApp struct {
 	Name           string
 	Org            string
@@ -53,9 +38,9 @@ type GitHubApp struct {
 }
 
 type GitHubAppSecretConfig struct {
-	Type     string
-	Region   string
-	SecretID string `yaml:"secret_id"`
+	Type      string
+	SecretID  string `yaml:"secret_id"`
+	VersionID string `yaml:"version_id"`
 }
 
 type GitHubAppSecret struct {
@@ -72,12 +57,6 @@ type Event struct {
 }
 
 type StringMatch struct {
-	// equal
-	// contain
-	// regexp
-	// prefix
-	// suffix
-	// glob
 	Type   string
 	Value  string
 	regexp *regexp.Regexp

@@ -1,20 +1,16 @@
 ---
-aws:
-  region: us-east-1
 github_apps:
   - name: webhook
     user: suzuki-shunsuke
     app_id: 123456789
     secret:
       type: aws_secretsmanager
-      region: us-east-1
       secret_id: test-gha-trigger-main
   - name: ci
     user: suzuki-shunsuke
     app_id: 123456789
     secret:
       type: aws_secretsmanager
-      region: us-east-1
       secret_id: test-gha-trigger-trigger-workflow
 repos:
   - repo_owner: suzuki-shunsuke
