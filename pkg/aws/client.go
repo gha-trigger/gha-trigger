@@ -18,8 +18,12 @@ type SecretsManager interface {
 
 func New(cfg *config.AWS) *Client {
 	sess := session.Must(session.NewSession())
+	awsCfg := aws.NewConfig()
+	if region := cfg.GetRegion(); region != "" {
+		awsCfg.WithRegion(region)
+	}
 	return &Client{
-		secretsManager: secretsmanager.New(sess, aws.NewConfig().WithRegion(cfg.Region)),
+		secretsManager: secretsmanager.New(sess, awsCfg),
 	}
 }
 
