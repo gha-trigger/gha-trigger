@@ -28,6 +28,13 @@ type AWS struct {
 	Region string
 }
 
+func (a *AWS) GetRegion() string {
+	if a == nil {
+		return ""
+	}
+	return a.Region
+}
+
 type GitHubApp struct {
 	Name           string
 	Org            string
