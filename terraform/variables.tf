@@ -16,13 +16,13 @@ variable "secretsmanager_secret_name_trigger_workflow" {
 variable "lambda_architecture" {
   type        = string
   description = ""
-  default     = "x86_64"
+  default     = "arm64"
 }
 
 variable "zip_path" {
   type        = string
   description = ""
-  default     = "gha-trigger-lambda_linux_amd64.zip"
+  default     = "gha-trigger-lambda_linux_arm64.zip"
 }
 
 variable "function_name" {
