@@ -70,8 +70,15 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 	// read config
 	cfg := &config.Config{}
 	osEnv := osenv.New()
-	if err := yaml.Unmarshal([]byte(osEnv.Getenv("CONFIG")), cfg); err != nil {
+	cfgS := osEnv.Getenv("CONFIG")
+	if cfgS == "" {
+		return nil, errors.New("environment variable 'CONFIG' is required")
+	}
+	if err := yaml.Unmarshal([]byte(cfgS), cfg); err != nil {
 		return nil, fmt.Errorf("parse the configuration as YAML: %w", err)
+	}
+	if err := config.Validate(cfg); err != nil {
+		return nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
 	if err := initCfg(cfg); err != nil {
 		return nil, fmt.Errorf("initialize configuration: %w", err)
