@@ -18,6 +18,7 @@ type WorkflowInput struct {
 	Event        interface{}          `json:"event"`
 	EventName    string               `json:"event_name"`
 	ChangedFiles []*github.CommitFile `json:"changed_files,omitempty"`
+	PullRequest  *github.PullRequest  `json:"pull_request,omitempty"`
 }
 
 func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *domain.Event) (map[string]interface{}, *domain.Response) {
@@ -25,6 +26,7 @@ func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *domain.Event) (
 		Event:        ev.Raw,
 		EventName:    ev.Type,
 		ChangedFiles: ev.ChangedFileObjs,
+		PullRequest:  ev.Payload.PullRequest,
 	}
 
 	b, err := json.Marshal(input)
@@ -75,6 +77,7 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 				},
 			}, nil
 		}
+		ev.Payload.PullRequest = pr
 	}
 
 	inputs, resp := handler.getWorkflowInput(logger, ev)
