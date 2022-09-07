@@ -7,6 +7,7 @@ import (
 
 	"github.com/gha-trigger/gha-trigger/pkg/aws"
 	"github.com/gha-trigger/gha-trigger/pkg/config"
+	"github.com/gha-trigger/gha-trigger/pkg/controller"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"github.com/gha-trigger/gha-trigger/pkg/githubapp"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -15,10 +16,8 @@ import (
 )
 
 type Handler struct {
-	cfg    *config.Config
 	logger *zap.Logger
-	osEnv  osenv.OSEnv
-	ghs    map[int64]*githubapp.GitHubApp
+	ctrl   *controller.Controller
 }
 
 func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
@@ -72,9 +71,7 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 
 	// initialize handler
 	return &Handler{
-		cfg:    cfg,
-		osEnv:  osEnv,
 		logger: logger,
-		ghs:    ghApps,
+		ctrl:   controller.New(cfg, logger, osEnv, ghApps),
 	}, nil
 }
