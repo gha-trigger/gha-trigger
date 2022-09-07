@@ -1,4 +1,4 @@
-package lambda
+package runworkflow
 
 import (
 	"context"
@@ -21,7 +21,7 @@ type WorkflowInput struct {
 	PullRequest  *github.PullRequest  `json:"pull_request,omitempty"`
 }
 
-func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *domain.Event) (map[string]interface{}, *domain.Response) {
+func getWorkflowInput(logger *zap.Logger, ev *domain.Event) (map[string]interface{}, *domain.Response) {
 	input := &WorkflowInput{
 		Event:        ev.Raw,
 		EventName:    ev.Type,
@@ -44,7 +44,7 @@ func (handler *Handler) getWorkflowInput(logger *zap.Logger, ev *domain.Event) (
 	}, nil
 }
 
-func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev *domain.Event, repoCfg *config.Repo, workflows []*config.Workflow) (*domain.Response, error) {
+func RunWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev *domain.Event, repoCfg *config.Repo, workflows []*config.Workflow) (*domain.Response, error) {
 	if len(workflows) == 0 {
 		logger.Info("no workflow is run")
 		return nil, nil //nolint:nilnil
@@ -57,7 +57,7 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 		// https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
 		// sha: Last merge commit on the GITHUB_REF branch
 		// ref: PR merge branch refs/pull/:prNumber/merge
-		pr, err := handler.waitPRMergeable(ctx, gh, pr, repoOwner, repoName)
+		pr, err := waitPRMergeable(ctx, gh, pr, repoOwner, repoName)
 		if err != nil {
 			logger.Error(
 				"wait until pull request's mergeable becomes not nil",
@@ -80,7 +80,7 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 		ev.Payload.PullRequest = pr
 	}
 
-	inputs, resp := handler.getWorkflowInput(logger, ev)
+	inputs, resp := getWorkflowInput(logger, ev)
 	if resp != nil {
 		return resp, nil
 	}
@@ -108,7 +108,7 @@ func (handler *Handler) runWorkflows(ctx context.Context, logger *zap.Logger, gh
 	return nil, nil //nolint:nilnil
 }
 
-func (handler *Handler) waitPRMergeable(ctx context.Context, gh *github.Client, pr *github.PullRequest, repoOwner, repoName string) (*github.PullRequest, error) {
+func waitPRMergeable(ctx context.Context, gh *github.Client, pr *github.PullRequest, repoOwner, repoName string) (*github.PullRequest, error) {
 	for i := 0; i < 10; i++ {
 		if m := pr.Mergeable; m != nil {
 			return pr, nil

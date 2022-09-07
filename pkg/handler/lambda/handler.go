@@ -8,6 +8,8 @@ import (
 	"github.com/gha-trigger/gha-trigger/pkg/config"
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/route"
+	"github.com/gha-trigger/gha-trigger/pkg/runworkflow"
+	"github.com/gha-trigger/gha-trigger/pkg/slashcommand"
 	"go.uber.org/zap"
 )
 
@@ -80,7 +82,7 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 		zap.String("ci_repo_name", repoCfg.CIRepoName),
 	)
 
-	if resp, err := handler.handleSlashCommand(ctx, logger, repoCfg, body); resp != nil {
+	if resp, err := slashcommand.Handle(ctx, logger, repoCfg, body); resp != nil {
 		return resp, err
 	}
 
@@ -91,5 +93,5 @@ func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHu
 		return resp, err
 	}
 
-	return handler.runWorkflows(ctx, logger, ghApp.Client, ev, repoCfg, workflows)
+	return runworkflow.RunWorkflows(ctx, logger, ghApp.Client, ev, repoCfg, workflows)
 }
