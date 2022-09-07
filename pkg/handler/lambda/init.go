@@ -35,7 +35,7 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 	if err := config.Validate(cfg); err != nil {
 		return nil, fmt.Errorf("configuration is invalid: %w", err)
 	}
-	if err := initCfg(cfg); err != nil {
+	if err := config.Init(cfg); err != nil {
 		return nil, fmt.Errorf("initialize configuration: %w", err)
 	}
 	// read env
@@ -77,25 +77,4 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 		logger: logger,
 		ghs:    ghApps,
 	}, nil
-}
-
-func initCfg(cfg *config.Config) error {
-	for _, repo := range cfg.Repos {
-		for _, event := range repo.Events {
-			for _, match := range event.Matches {
-				if err := match.Compile(); err != nil {
-					return err
-				}
-				for _, ev := range match.Events {
-					if ev.Name == "pull_request" && ev.Types == nil {
-						// https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
-						// > By default, a workflow only runs when a pull_request event's activity type is
-						// > opened, synchronize, or reopened.
-						ev.Types = []string{"opened", "synchronize", "reopened"}
-					}
-				}
-			}
-		}
-	}
-	return nil
 }
