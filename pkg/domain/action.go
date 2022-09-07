@@ -100,4 +100,5 @@ type Payload struct {
 	PullRequest *github.PullRequest `json:"pull_request"`
 	Ref         string              `json:"ref"`
 	Action      string              `json:"action"`
+	Deleted     bool                `json:"deleted"`
 }
