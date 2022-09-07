@@ -29,7 +29,7 @@ func matchTags(ctx context.Context, matchConfig *config.Match, event *domain.Eve
 }
 
 func matchTagsIgnore(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
-	if len(matchConfig.Tags) == 0 {
+	if len(matchConfig.TagsIgnore) == 0 {
 		return true, nil, nil
 	}
 	if event.Payload.Ref != "" {
