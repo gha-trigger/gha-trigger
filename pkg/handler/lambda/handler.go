@@ -7,6 +7,7 @@ import (
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
+	"github.com/gha-trigger/gha-trigger/pkg/githubapp"
 	"github.com/gha-trigger/gha-trigger/pkg/route"
 	"github.com/gha-trigger/gha-trigger/pkg/runworkflow"
 	"github.com/gha-trigger/gha-trigger/pkg/slashcommand"
@@ -45,7 +46,7 @@ func (handler *Handler) Do(ctx context.Context, req *domain.Request) (*domain.Re
 	return handler.do(ctx, logger, ghApp, ev)
 }
 
-func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *GitHubApp, ev *domain.Event) (*domain.Response, error) {
+func (handler *Handler) do(ctx context.Context, logger *zap.Logger, ghApp *githubapp.GitHubApp, ev *domain.Event) (*domain.Response, error) {
 	body := ev.Body
 
 	if ev.Payload.Repo == nil {

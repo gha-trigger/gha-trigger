@@ -6,11 +6,12 @@ import (
 
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/githubapp"
 	"github.com/gha-trigger/gha-trigger/pkg/util"
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) validate(logger *zap.Logger, req *domain.Request) (*GitHubApp, *domain.Event, *domain.Response) {
+func (handler *Handler) validate(logger *zap.Logger, req *domain.Request) (*githubapp.GitHubApp, *domain.Event, *domain.Response) {
 	headers := req.Params.Headers
 	bodyStr := req.Body
 	appIDS, ok := headers["X-GITHUB-HOOK-INSTALLATION-TARGET-ID"]
