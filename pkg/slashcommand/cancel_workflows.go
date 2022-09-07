@@ -1,4 +1,4 @@
-package lambda
+package slashcommand
 
 import (
 	"context"
@@ -7,11 +7,12 @@ import (
 
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/util"
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*domain.Response, error) {
-	// /rerun-failed-job <workflow id> [<workflow id> ...]
+func cancelWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*domain.Response, error) {
+	// /cancel <workflow id> [<workflow id> ...]
 	words := strings.Split(strings.TrimSpace(cmtBody), " ")
 	if len(words) < 2 { //nolint:gomnd
 		return &domain.Response{
@@ -25,29 +26,27 @@ func (handler *Handler) rerunFailedJobs(ctx context.Context, logger *zap.Logger,
 	resp := &domain.Response{
 		StatusCode: http.StatusOK,
 		Body: map[string]interface{}{
-			"message": "failed jobs are rerun",
+			"message": "workflows are cancelled",
 		},
 	}
 	for _, workflowID := range words[1:] {
-		runID, err := parseInt64(workflowID)
+		// TODO validation
+		runID, err := util.ParseInt64(workflowID)
 		if err != nil {
-			logger.Warn("parse a workflow id as int64", zap.Error(err))
+			logger.Warn("parse a workflow run id as int64", zap.Error(err))
 			if resp.StatusCode == http.StatusOK {
 				resp.StatusCode = http.StatusBadRequest
 			}
 			continue
 		}
 		logger := logger.With(zap.Int64("workflow_run_id", runID))
-		logger.Info("rerunning failed jobs")
-		if res, err := gh.RerunFailedJobs(ctx, owner, repo, runID); err != nil {
-			logger.Error(
-				"rerun failed jobs", zap.Error(err),
-				zap.Int("status_code", res.StatusCode),
-			)
+		logger.Info("cancelling a workflow")
+		if res, err := gh.CancelWorkflow(ctx, owner, repo, runID); err != nil {
+			logger.Error("cancel a workflow", zap.Error(err), zap.Int("status_code", res.StatusCode))
 			resp = &domain.Response{
 				StatusCode: http.StatusInternalServerError,
 				Body: map[string]interface{}{
-					"message": "failed to rerun failed jobs",
+					"message": "failed to cancel a workflow",
 				},
 			}
 			continue

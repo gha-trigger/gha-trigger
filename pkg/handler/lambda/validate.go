@@ -6,6 +6,7 @@ import (
 
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/util"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +23,7 @@ func (handler *Handler) validate(logger *zap.Logger, req *domain.Request) (*GitH
 			},
 		}
 	}
-	appID, err := parseInt64(appIDS)
+	appID, err := util.ParseInt64(appIDS)
 	if err != nil {
 		logger.Warn("header X-GITHUB-HOOK-INSTALLATION-TARGET-ID must be integer")
 		return nil, nil, &domain.Response{

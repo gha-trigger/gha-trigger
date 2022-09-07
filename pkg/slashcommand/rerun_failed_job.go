@@ -1,4 +1,4 @@
-package lambda
+package slashcommand
 
 import (
 	"context"
@@ -7,17 +7,18 @@ import (
 
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/util"
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) rerunWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*domain.Response, error) {
-	// /rerun-workflow <workflow id> [<workflow id> ...]
+func rerunFailedJobs(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*domain.Response, error) {
+	// /rerun-failed-job <workflow id> [<workflow id> ...]
 	words := strings.Split(strings.TrimSpace(cmtBody), " ")
 	if len(words) < 2 { //nolint:gomnd
 		return &domain.Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
-				"error": "signature is invalid",
+				"error": "workflow ids are required",
 			},
 		}, nil
 	}
@@ -25,27 +26,29 @@ func (handler *Handler) rerunWorkflows(ctx context.Context, logger *zap.Logger, 
 	resp := &domain.Response{
 		StatusCode: http.StatusOK,
 		Body: map[string]interface{}{
-			"message": "workflows are rerun",
+			"message": "failed jobs are rerun",
 		},
 	}
-	for _, workflowRunID := range words[1:] {
-		// TODO validation
-		runID, err := parseInt64(workflowRunID)
+	for _, workflowID := range words[1:] {
+		runID, err := util.ParseInt64(workflowID)
 		if err != nil {
-			logger.Warn("parse a workflow run id as int64", zap.Error(err))
+			logger.Warn("parse a workflow id as int64", zap.Error(err))
 			if resp.StatusCode == http.StatusOK {
 				resp.StatusCode = http.StatusBadRequest
 			}
 			continue
 		}
 		logger := logger.With(zap.Int64("workflow_run_id", runID))
-		logger.Info("rerunning a workflow")
-		if res, err := gh.RerunWorkflow(ctx, owner, repo, runID); err != nil {
-			logger.Error("rerun a workflow", zap.Error(err), zap.Int("status_code", res.StatusCode))
+		logger.Info("rerunning failed jobs")
+		if res, err := gh.RerunFailedJobs(ctx, owner, repo, runID); err != nil {
+			logger.Error(
+				"rerun failed jobs", zap.Error(err),
+				zap.Int("status_code", res.StatusCode),
+			)
 			resp = &domain.Response{
 				StatusCode: http.StatusInternalServerError,
 				Body: map[string]interface{}{
-					"message": "failed to rerun a workflow",
+					"message": "failed to rerun failed jobs",
 				},
 			}
 			continue
