@@ -1,4 +1,4 @@
-package lambda
+package controller
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (handler *Handler) validate(logger *zap.Logger, req *domain.Request) (*githubapp.GitHubApp, *domain.Event, *domain.Response) {
+func (ctrl *Controller) validate(logger *zap.Logger, req *domain.Request) (*githubapp.GitHubApp, *domain.Event, *domain.Response) {
 	headers := req.Params.Headers
 	bodyStr := req.Body
 	appIDS, ok := headers["X-GITHUB-HOOK-INSTALLATION-TARGET-ID"]
@@ -34,7 +34,7 @@ func (handler *Handler) validate(logger *zap.Logger, req *domain.Request) (*gith
 			},
 		}
 	}
-	ghApp, ok := handler.ghs[appID]
+	ghApp, ok := ctrl.ghs[appID]
 	if !ok {
 		logger.Warn("unknown GitHub App ID", zap.Int64("github_app_id", appID))
 		return nil, nil, &domain.Response{
