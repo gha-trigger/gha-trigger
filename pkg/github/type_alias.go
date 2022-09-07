@@ -21,6 +21,7 @@ type (
 	IssueCommentEvent                  = github.IssueCommentEvent
 	ListOptions                        = github.ListOptions
 	PullRequest                        = github.PullRequest
+	PullRequestBranch                  = github.PullRequestBranch
 	PullRequestTargetEvent             = github.PullRequestTargetEvent
 	PullRequestEvent                   = github.PullRequestEvent
 	PushEvent                          = github.PushEvent
