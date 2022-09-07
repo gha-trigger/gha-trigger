@@ -15,6 +15,11 @@ func matchEventType(ctx context.Context, matchConfig *config.Match, event *domai
 		if ev.Name != event.Type {
 			continue
 		}
+		if ev.Name == "push" && event.Payload.Deleted {
+			// https://github.com/gha-trigger/gha-trigger/issues/107
+			// Ignore a push event when a branch or tag is deleted.
+			return false, nil, nil
+		}
 		if len(ev.Types) == 0 {
 			return true, nil, nil
 		}
