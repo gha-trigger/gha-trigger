@@ -16,6 +16,7 @@ type (
 	CommitFile                         = github.CommitFile
 	CreateWorkflowDispatchEventRequest = github.CreateWorkflowDispatchEventRequest
 	Deployment                         = github.Deployment
+	HeadCommit                         = github.HeadCommit
 	Installation                       = github.Installation
 	IssueCommentEvent                  = github.IssueCommentEvent
 	ListOptions                        = github.ListOptions
@@ -25,6 +26,7 @@ type (
 	PushEvent                          = github.PushEvent
 	ReleaseEvent                       = github.ReleaseEvent
 	Repository                         = github.Repository
+	RepositoryCommit                   = github.RepositoryCommit
 	Response                           = github.Response
 	StatusEvent                        = github.StatusEvent
 	V3Client                           = github.Client

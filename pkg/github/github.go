@@ -10,14 +10,16 @@ import (
 )
 
 type Client struct {
-	pr     PullRequestsService
 	action ActionsService
+	pr     PullRequestsService
+	repo   RepositoriesService
 }
 
 func New(gh *V3Client) *Client {
 	return &Client{
 		pr:     gh.PullRequests,
 		action: gh.Actions,
+		repo:   gh.Repositories,
 	}
 }
 

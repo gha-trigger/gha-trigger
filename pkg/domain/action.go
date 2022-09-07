@@ -69,6 +69,13 @@ func (ev *Event) GetChangedFiles(ctx context.Context) ([]string, error) {
 			}
 			ev.ChangedFileObjs = files
 			ev.ChangedFiles = getChangedFiles(files)
+		case "push":
+			commit, _, err := ev.GitHub.GetCommit(ctx, ev.Payload.Repo.GetOwner().GetLogin(), ev.Payload.Repo.GetName(), ev.Payload.HeadCommit.GetID())
+			if err != nil {
+				return nil, fmt.Errorf("list commit files: %w", err)
+			}
+			ev.ChangedFileObjs = commit.Files
+			ev.ChangedFiles = getChangedFiles(commit.Files)
 		default:
 		}
 	}
@@ -101,4 +108,5 @@ type Payload struct {
 	Ref         string              `json:"ref"`
 	Action      string              `json:"action"`
 	Deleted     bool                `json:"deleted"`
+	HeadCommit  *github.HeadCommit  `json:"head_commit"`
 }
