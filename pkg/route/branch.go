@@ -20,6 +20,7 @@ func matchBranches(ctx context.Context, matchConfig *config.Match, event *domain
 			if err != nil {
 				return false, nil, err
 			}
+			// OR condition
 			if f {
 				return true, nil, nil
 			}
