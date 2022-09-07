@@ -115,7 +115,9 @@ resource "aws_api_gateway_deployment" "main" {
 
   depends_on = [
     # Error: Error creating API Gateway Deployment: BadRequestException: The REST API doesn't contain any methods
-    aws_api_gateway_method.main
+    aws_api_gateway_method.main,
+    # Error: Error creating API Gateway Deployment: BadRequestException: No integration defined for method
+    aws_api_gateway_integration.main
   ]
 
   lifecycle {
