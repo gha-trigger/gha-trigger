@@ -8,6 +8,7 @@ import (
 	"github.com/gha-trigger/gha-trigger/pkg/aws"
 	"github.com/gha-trigger/gha-trigger/pkg/config"
 	"github.com/gha-trigger/gha-trigger/pkg/controller"
+	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"github.com/gha-trigger/gha-trigger/pkg/githubapp"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
@@ -17,19 +18,19 @@ import (
 
 type Handler struct {
 	logger *zap.Logger
-	ctrl   *controller.Controller
+	ctrl   Controller
+}
+
+type Controller interface {
+	Do(ctx context.Context, logger *zap.Logger, req *domain.Request) (*domain.Response, error)
 }
 
 func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 	// read config
 	cfg := &config.Config{}
 	osEnv := osenv.New()
-	cfgS := osEnv.Getenv("CONFIG")
-	if cfgS == "" {
-		return nil, errors.New("environment variable 'CONFIG' is required")
-	}
-	if err := yaml.Unmarshal([]byte(cfgS), cfg); err != nil {
-		return nil, fmt.Errorf("parse the configuration as YAML: %w", err)
+	if err := readConfig(cfg, osEnv); err != nil {
+		return nil, err
 	}
 	if err := config.Validate(cfg); err != nil {
 		return nil, fmt.Errorf("configuration is invalid: %w", err)
@@ -37,7 +38,6 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 	if err := config.Init(cfg); err != nil {
 		return nil, fmt.Errorf("initialize configuration: %w", err)
 	}
-	// read env
 	// read secret
 	awsClient := aws.New(cfg.AWS)
 	numGitHubApps := len(cfg.GitHubApps)
@@ -53,13 +53,36 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 		ghs[appCfg.Name] = ghApp.Client
 	}
 
-	numRepos := len(cfg.Repos)
+	if err := bindGitHubAppToWorkflow(cfg.Repos, ghs); err != nil {
+		return nil, err
+	}
+
+	// initialize handler
+	return &Handler{
+		logger: logger,
+		ctrl:   controller.New(cfg, logger, osEnv, ghApps),
+	}, nil
+}
+
+func readConfig(cfg *config.Config, osEnv osenv.OSEnv) error {
+	cfgS := osEnv.Getenv("CONFIG")
+	if cfgS == "" {
+		return errors.New("environment variable 'CONFIG' is required")
+	}
+	if err := yaml.Unmarshal([]byte(cfgS), cfg); err != nil {
+		return fmt.Errorf("parse the configuration as YAML: %w", err)
+	}
+	return nil
+}
+
+func bindGitHubAppToWorkflow(repos []*config.Repo, ghs map[string]*github.Client) error {
+	numRepos := len(repos)
 	for i := 0; i < numRepos; i++ {
-		repo := cfg.Repos[i]
+		repo := repos[i]
 		numEvents := len(repo.Events)
 		gh, ok := ghs[repo.WorkflowGitHubAppName]
 		if !ok {
-			return nil, errors.New("invalid github app name")
+			return errors.New("invalid github app name")
 		}
 		repo.GitHub = gh
 		for j := 0; j < numEvents; j++ {
@@ -68,10 +91,5 @@ func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {
 			wfCfg.GitHub = gh
 		}
 	}
-
-	// initialize handler
-	return &Handler{
-		logger: logger,
-		ctrl:   controller.New(cfg, logger, osEnv, ghApps),
-	}, nil
+	return nil
 }
