@@ -7,14 +7,23 @@ import (
 
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
-	"github.com/gha-trigger/gha-trigger/pkg/util"
 	"go.uber.org/zap"
 )
 
-func cancelWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo, cmtBody string) (*domain.Response, error) {
+type WorkflowCanceler interface {
+	CancelWorkflow(ctx context.Context, owner, repo string, runID int64) (*github.Response, error)
+}
+
+func cancelWorkflows(ctx context.Context, logger *zap.Logger, gh WorkflowCanceler, owner, repo, cmtBody string) (*domain.Response, error) {
 	// /cancel <workflow id> [<workflow id> ...]
 	words := strings.Split(strings.TrimSpace(cmtBody), " ")
+
+	if words[0] != "/cancel" {
+		return nil, nil
+	}
+
 	if len(words) < 2 { //nolint:gomnd
+		// TODO send notification to issue or pr
 		return &domain.Response{
 			StatusCode: http.StatusBadRequest,
 			Body: map[string]interface{}{
@@ -22,26 +31,24 @@ func cancelWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client,
 			},
 		}, nil
 	}
-	var gErr error
-	resp := &domain.Response{
-		StatusCode: http.StatusOK,
-		Body: map[string]interface{}{
-			"message": "workflows are cancelled",
-		},
+
+	ids, err := parseIDs(words[1:])
+	if err != nil {
+		logger.Warn("parse a workflow run id as int64", zap.Error(err))
+		return &domain.Response{
+			StatusCode: http.StatusBadRequest,
+			Body: map[string]interface{}{
+				"message": "workflow run id is invalid",
+			},
+		}, nil
 	}
-	for _, workflowID := range words[1:] {
-		// TODO validation
-		runID, err := util.ParseInt64(workflowID)
-		if err != nil {
-			logger.Warn("parse a workflow run id as int64", zap.Error(err))
-			if resp.StatusCode == http.StatusOK {
-				resp.StatusCode = http.StatusBadRequest
-			}
-			continue
-		}
+
+	var resp *domain.Response
+	for _, runID := range ids {
 		logger := logger.With(zap.Int64("workflow_run_id", runID))
 		logger.Info("cancelling a workflow")
 		if res, err := gh.CancelWorkflow(ctx, owner, repo, runID); err != nil {
+			// TODO send a notification to pr or issue
 			logger.Error("cancel a workflow", zap.Error(err), zap.Int("status_code", res.StatusCode))
 			resp = &domain.Response{
 				StatusCode: http.StatusInternalServerError,
@@ -49,8 +56,7 @@ func cancelWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client,
 					"message": "failed to cancel a workflow",
 				},
 			}
-			continue
 		}
 	}
-	return resp, gErr
+	return resp, nil
 }

@@ -39,3 +39,4 @@ linters:
     - contextcheck
     - gochecknoglobals
     - gomnd
+    - nilnil
