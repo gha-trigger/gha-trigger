@@ -14,12 +14,13 @@ type WorkflowCanceler interface {
 // return true if request matches
 func cancelWorkflows(ctx context.Context, logger *zap.Logger, gh WorkflowCanceler, owner, repo string, words []string) {
 	// /cancel <workflow id> [<workflow id> ...]
-	if len(words) < 2 { //nolint:gomnd
+	if len(words) == 0 { //nolint:gomnd
 		// TODO send notification to issue or pr
+		logger.Warn("workflow id is required for /cancel")
 		return
 	}
 
-	ids, err := parseIDs(words[1:])
+	ids, err := parseIDs(words)
 	if err != nil {
 		logger.Warn("parse a workflow run id as int64", zap.Error(err))
 		return

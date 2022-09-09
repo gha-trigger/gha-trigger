@@ -23,13 +23,13 @@ func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, body 
 	firstWord := words[0]
 	switch firstWord {
 	case "/rerun-workflow":
-		rerunWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words)
+		rerunWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words[1:])
 		return true
 	case "/rerun-failed-job":
-		rerunFailedJobs(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words)
+		rerunFailedJobs(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words[1:])
 		return true
 	case "/cancel":
-		cancelWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words)
+		cancelWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words[1:])
 		return true
 	}
 	return false

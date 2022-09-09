@@ -27,16 +27,15 @@ func Test_cancelWorkflows(t *testing.T) {
 		gh    WorkflowCanceler
 	}{
 		{
-			name:  "ids are required",
-			words: []string{"/cancel"},
+			name: "ids are required",
 		},
 		{
 			name:  "invalid id",
-			words: []string{"/cancel", "1", "foo"},
+			words: []string{"1", "foo"},
 		},
 		{
 			name:  "normal",
-			words: []string{"/cancel", "1", "2"},
+			words: []string{"1", "2"},
 			gh:    &canceler{},
 		},
 	}

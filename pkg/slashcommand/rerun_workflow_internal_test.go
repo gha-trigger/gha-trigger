@@ -27,16 +27,15 @@ func Test_rerunWorkflows(t *testing.T) {
 		gh    WorkflowRerunner
 	}{
 		{
-			name:  "ids are required",
-			words: []string{"/rerun-workflow"},
+			name: "ids are required",
 		},
 		{
 			name:  "invalid id",
-			words: []string{"/rerun-workflow", "1", "foo"},
+			words: []string{"1", "foo"},
 		},
 		{
 			name:  "normal",
-			words: []string{"/rerun-workflow", "1", "2"},
+			words: []string{"1", "2"},
 			gh:    &workflowRerunner{},
 		},
 	}
