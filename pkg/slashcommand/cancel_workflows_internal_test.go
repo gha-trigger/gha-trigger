@@ -8,36 +8,36 @@ import (
 	"go.uber.org/zap"
 )
 
-type failedJobsRerunner struct {
+type canceler struct {
 	resp *github.Response
 	err  error
 }
 
-func (c *failedJobsRerunner) RerunFailedJobs(ctx context.Context, owner, repo string, runID int64) (*github.Response, error) {
+func (c *canceler) CancelWorkflow(ctx context.Context, owner, repo string, runID int64) (*github.Response, error) {
 	return c.resp, c.err
 }
 
-func Test_rerunFailedJobs(t *testing.T) {
+func Test_cancelWorkflows(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name  string
 		owner string
 		repo  string
 		words []string
-		gh    FailedJobsRerunner
+		gh    WorkflowCanceler
 	}{
 		{
 			name:  "ids are required",
-			words: []string{"/rerun-failed-job"},
+			words: []string{"/cancel"},
 		},
 		{
 			name:  "invalid id",
-			words: []string{"/rerun-failed-job", "1", "foo"},
+			words: []string{"/cancel", "1", "foo"},
 		},
 		{
 			name:  "normal",
-			words: []string{"/rerun-failed-job", "1", "2"},
-			gh:    &failedJobsRerunner{},
+			words: []string{"/cancel", "1", "2"},
+			gh:    &canceler{},
 		},
 	}
 	ctx := context.Background()
@@ -46,7 +46,7 @@ func Test_rerunFailedJobs(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			rerunFailedJobs(ctx, logger, tt.gh, tt.owner, tt.repo, tt.words)
+			cancelWorkflows(ctx, logger, tt.gh, tt.owner, tt.repo, tt.words)
 		})
 	}
 }

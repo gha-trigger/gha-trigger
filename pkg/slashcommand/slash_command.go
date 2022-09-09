@@ -9,28 +9,28 @@ import (
 	"go.uber.org/zap"
 )
 
-func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, body interface{}) (bool, error) {
+func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, body interface{}) bool {
 	issueCommentEvent, ok := body.(*github.IssueCommentEvent)
 	if !ok {
-		return false, nil //nolint:nilnil
+		return false
 	}
 	cmt := issueCommentEvent.GetComment()
 	if strings.Contains(cmt.GetHTMLURL(), "/issue/") {
-		return false, nil //nolint:nilnil
+		return false
 	}
 
-	cmtBody := cmt.GetBody()
-	if strings.HasPrefix(cmtBody, "/rerun-workflow") {
-		return rerunWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, cmtBody)
+	words := strings.Split(cmt.GetBody(), " ")
+	firstWord := words[0]
+	switch firstWord {
+	case "/rerun-workflow":
+		rerunWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words)
+		return true
+	case "/rerun-failed-job":
+		rerunFailedJobs(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words)
+		return true
+	case "/cancel":
+		cancelWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words)
+		return true
 	}
-	if strings.HasPrefix(cmtBody, "/rerun-failed-job") {
-		return rerunFailedJobs(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, cmtBody)
-	}
-	// if strings.HasPrefix(cmtBody, "/rerun-job") {
-	// 	return rerunJobs(ctx, logger, gh, owner, repoName, cmtBody)
-	// }
-	if strings.HasPrefix(cmtBody, "/cancel") {
-		return cancelWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, cmtBody)
-	}
-	return false, nil //nolint:nilnil
+	return false
 }

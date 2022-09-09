@@ -58,11 +58,7 @@ func (ctrl *Controller) do(ctx context.Context, logger *zap.Logger, ghApp *githu
 		zap.String("ci_repo_name", repoCfg.CIRepoName),
 	)
 
-	isSlashCommand, err := slashcommand.Handle(ctx, logger, repoCfg, body)
-	if err != nil {
-		return err
-	}
-	if isSlashCommand {
+	if slashcommand.Handle(ctx, logger, repoCfg, body) {
 		return nil
 	}
 
