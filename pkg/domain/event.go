@@ -9,7 +9,6 @@ import (
 )
 
 type Event struct {
-	Body            interface{}
 	Raw             map[string]interface{}
 	Payload         *Payload
 	ChangedFiles    []string

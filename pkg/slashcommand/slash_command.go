@@ -5,16 +5,15 @@ import (
 	"strings"
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
-	"github.com/gha-trigger/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"go.uber.org/zap"
 )
 
-func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, body interface{}) bool {
-	issueCommentEvent, ok := body.(*github.IssueCommentEvent)
-	if !ok {
+func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, ev *domain.Event) bool {
+	if ev.Type == "issue_comment" {
 		return false
 	}
-	cmt := issueCommentEvent.GetComment()
+	cmt := ev.Payload.Comment
 	if strings.Contains(cmt.GetHTMLURL(), "/issue/") {
 		return false
 	}

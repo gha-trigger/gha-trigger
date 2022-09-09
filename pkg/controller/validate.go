@@ -54,12 +54,6 @@ func (ctrl *Controller) validate(logger *zap.Logger, req *domain.Request) (*gith
 		return nil, nil, errHeaderXHubEventIsRequired
 	}
 
-	body, err := github.ParseWebHook(evType, bodyB)
-	if err != nil {
-		logger.Warn("parse a webhook payload", zap.Error(err))
-		return nil, nil, fmt.Errorf("parse a webhook payload: %w", err)
-	}
-
 	raw := map[string]interface{}{}
 	if err := json.Unmarshal(bodyB, &raw); err != nil {
 		logger.Warn("parse a webhook payload", zap.Error(err))
@@ -73,7 +67,6 @@ func (ctrl *Controller) validate(logger *zap.Logger, req *domain.Request) (*gith
 	}
 
 	return ghApp, &domain.Event{
-		Body:    body,
 		Raw:     raw,
 		Type:    evType,
 		Request: req,

@@ -31,10 +31,12 @@ type RequestParamsField struct {
 }
 
 type Payload struct {
-	Repo        *github.Repository  `json:"repository"`
-	PullRequest *github.PullRequest `json:"pull_request"`
-	Ref         string              `json:"ref"`
-	Action      string              `json:"action"`
-	Deleted     bool                `json:"deleted"`
-	HeadCommit  *github.HeadCommit  `json:"head_commit"`
+	Repo        *github.Repository   `json:"repository"`
+	PullRequest *github.PullRequest  `json:"pull_request"`
+	Ref         string               `json:"ref"`
+	Action      string               `json:"action"`
+	Deleted     bool                 `json:"deleted"`
+	HeadCommit  *github.HeadCommit   `json:"head_commit"`
+	Comment     *github.IssueComment `json:"comment"`
+	Issue       *github.Issue        `json:"issue"`
 }
