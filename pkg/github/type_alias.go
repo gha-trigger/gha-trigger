@@ -18,6 +18,8 @@ type (
 	Deployment                         = github.Deployment
 	HeadCommit                         = github.HeadCommit
 	Installation                       = github.Installation
+	Issue                              = github.Issue
+	IssueComment                       = github.IssueComment
 	IssueCommentEvent                  = github.IssueCommentEvent
 	ListOptions                        = github.ListOptions
 	PullRequest                        = github.PullRequest

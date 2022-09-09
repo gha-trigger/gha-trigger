@@ -31,8 +31,6 @@ func (ctrl *Controller) Do(ctx context.Context, logger *zap.Logger, req *domain.
 }
 
 func (ctrl *Controller) do(ctx context.Context, logger *zap.Logger, ghApp *githubapp.GitHubApp, ev *domain.Event) error {
-	body := ev.Body
-
 	if ev.Payload.Repo == nil {
 		logger.Info("event is ignored because a repository isn't found in the payload")
 		return nil
@@ -58,7 +56,7 @@ func (ctrl *Controller) do(ctx context.Context, logger *zap.Logger, ghApp *githu
 		zap.String("ci_repo_name", repoCfg.CIRepoName),
 	)
 
-	if slashcommand.Handle(ctx, logger, repoCfg, body) {
+	if slashcommand.Handle(ctx, logger, repoCfg, ev) {
 		return nil
 	}
 
