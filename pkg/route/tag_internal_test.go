@@ -66,7 +66,7 @@ func Test_matchTags(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			f, _, err := matchTags(ctx, tt.matchConfig, tt.event)
+			f, err := matchTags(ctx, tt.matchConfig, tt.event)
 			if err != nil {
 				if tt.wantErr {
 					return
@@ -145,7 +145,7 @@ func Test_matchTagsIgnore(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			f, _, err := matchTagsIgnore(ctx, tt.matchConfig, tt.event)
+			f, err := matchTagsIgnore(ctx, tt.matchConfig, tt.event)
 			if err != nil {
 				if tt.wantErr {
 					return

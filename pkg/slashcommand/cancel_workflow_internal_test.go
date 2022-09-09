@@ -2,12 +2,9 @@ package slashcommand
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
-	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
-	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +22,7 @@ func Test_cancelWorkflows(t *testing.T) {
 	tests := []struct {
 		name    string
 		wantErr bool
-		resp    *domain.Response
+		matched bool
 		owner   string
 		repo    string
 		body    string
@@ -36,29 +33,20 @@ func Test_cancelWorkflows(t *testing.T) {
 			body: "/cancel-foo",
 		},
 		{
-			name: "ids are required",
-			body: "/cancel",
-			resp: &domain.Response{
-				StatusCode: http.StatusBadRequest,
-				Body: map[string]interface{}{
-					"error": "workflow ids are required",
-				},
-			},
+			name:    "ids are required",
+			body:    "/cancel",
+			matched: true,
 		},
 		{
-			name: "invalid id",
-			body: "/cancel 1 foo",
-			resp: &domain.Response{
-				StatusCode: http.StatusBadRequest,
-				Body: map[string]interface{}{
-					"message": "workflow run id is invalid",
-				},
-			},
+			name:    "invalid id",
+			body:    "/cancel 1 foo",
+			matched: true,
 		},
 		{
-			name: "normal",
-			body: "/cancel 1 2",
-			gh:   &canceler{},
+			name:    "normal",
+			body:    "/cancel 1 2",
+			matched: true,
+			gh:      &canceler{},
 		},
 	}
 	ctx := context.Background()
@@ -67,7 +55,7 @@ func Test_cancelWorkflows(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			resp, err := cancelWorkflows(ctx, logger, tt.gh, tt.owner, tt.repo, tt.body)
+			matched, err := cancelWorkflows(ctx, logger, tt.gh, tt.owner, tt.repo, tt.body)
 			if err != nil {
 				if tt.wantErr {
 					return
@@ -77,8 +65,8 @@ func Test_cancelWorkflows(t *testing.T) {
 			if tt.wantErr {
 				t.Fatal("error must be returned")
 			}
-			if diff := cmp.Diff(resp, tt.resp); diff != "" {
-				t.Fatal(diff)
+			if matched != tt.matched {
+				t.Fatalf("wanted %v, got %v", tt.matched, matched)
 			}
 		})
 	}

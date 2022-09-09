@@ -98,12 +98,6 @@ type RequestParamsField struct {
 	Headers map[string]string `json:"header"`
 }
 
-type Response struct {
-	StatusCode int              `json:"statusCode"`
-	Headers    *ResponseHeaders `json:"headers"`
-	Body       interface{}      `json:"body"`
-}
-
 type ResponseHeaders struct {
 	ContentType string `json:"Content-Type"`
 }

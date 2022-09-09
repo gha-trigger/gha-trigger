@@ -114,7 +114,7 @@ func Test_matchBranches(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			f, _, err := matchBranches(ctx, tt.matchConfig, tt.event)
+			f, err := matchBranches(ctx, tt.matchConfig, tt.event)
 			if err != nil {
 				if tt.wantErr {
 					return
@@ -239,7 +239,7 @@ func Test_matchBranchesIgnore(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			f, _, err := matchBranchesIgnore(ctx, tt.matchConfig, tt.event)
+			f, err := matchBranchesIgnore(ctx, tt.matchConfig, tt.event)
 			if err != nil {
 				if tt.wantErr {
 					return

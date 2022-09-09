@@ -8,9 +8,9 @@ import (
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 )
 
-func matchBranches(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchBranches(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, error) {
 	if len(matchConfig.Branches) == 0 {
-		return true, nil, nil
+		return true, nil
 	}
 	if event.Payload.PullRequest != nil {
 		base := event.Payload.PullRequest.GetBase()
@@ -18,34 +18,34 @@ func matchBranches(ctx context.Context, matchConfig *config.Match, event *domain
 		for _, branch := range matchConfig.Branches {
 			f, err := branch.Match(ref)
 			if err != nil {
-				return false, nil, err
+				return false, err
 			}
 			// OR condition
 			if f {
-				return true, nil, nil
+				return true, nil
 			}
 		}
-		return false, nil, nil
+		return false, nil
 	}
 	if event.Payload.Ref != "" {
 		ref := strings.TrimPrefix(event.Payload.Ref, "refs/heads/")
 		for _, branch := range matchConfig.Branches {
 			f, err := branch.Match(ref)
 			if err != nil {
-				return false, nil, err
+				return false, err
 			}
 			if f {
-				return true, nil, nil
+				return true, nil
 			}
 		}
-		return false, nil, nil
+		return false, nil
 	}
-	return false, nil, nil
+	return false, nil
 }
 
-func matchBranchesIgnore(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchBranchesIgnore(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, error) {
 	if len(matchConfig.BranchesIgnore) == 0 {
-		return true, nil, nil
+		return true, nil
 	}
 	if event.Payload.PullRequest != nil {
 		base := event.Payload.PullRequest.GetBase()
@@ -53,26 +53,26 @@ func matchBranchesIgnore(ctx context.Context, matchConfig *config.Match, event *
 		for _, branch := range matchConfig.BranchesIgnore {
 			f, err := branch.Match(ref)
 			if err != nil {
-				return false, nil, err
+				return false, err
 			}
 			if f {
-				return false, nil, nil
+				return false, nil
 			}
 		}
-		return true, nil, nil
+		return true, nil
 	}
 	if event.Payload.Ref != "" {
 		ref := strings.TrimPrefix(event.Payload.Ref, "refs/heads/")
 		for _, branch := range matchConfig.BranchesIgnore {
 			f, err := branch.Match(ref)
 			if err != nil {
-				return false, nil, err
+				return false, err
 			}
 			if f {
-				return false, nil, nil
+				return false, nil
 			}
 		}
-		return true, nil, nil
+		return true, nil
 	}
-	return true, nil, nil
+	return true, nil
 }

@@ -22,7 +22,7 @@ type Handler struct {
 }
 
 type Controller interface {
-	Do(ctx context.Context, logger *zap.Logger, req *domain.Request) (*domain.Response, error)
+	Do(ctx context.Context, logger *zap.Logger, req *domain.Request) error
 }
 
 func New(ctx context.Context, logger *zap.Logger) (*Handler, error) {

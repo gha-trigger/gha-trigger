@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"net/http"
+	"fmt"
 	"time"
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
@@ -21,7 +21,7 @@ type WorkflowInput struct {
 	PullRequest  *github.PullRequest  `json:"pull_request,omitempty"`
 }
 
-func getWorkflowInput(logger *zap.Logger, ev *domain.Event) (map[string]interface{}, *domain.Response) {
+func getWorkflowInput(ev *domain.Event) (map[string]interface{}, error) {
 	input := &WorkflowInput{
 		Event:        ev.Raw,
 		EventName:    ev.Type,
@@ -31,23 +31,17 @@ func getWorkflowInput(logger *zap.Logger, ev *domain.Event) (map[string]interfac
 
 	b, err := json.Marshal(input)
 	if err != nil {
-		logger.Error("marshal input as JSON", zap.Error(err))
-		return nil, &domain.Response{
-			StatusCode: http.StatusInternalServerError,
-			Body: map[string]interface{}{
-				"error": "Internal Server Error",
-			},
-		}
+		return nil, fmt.Errorf("marshal input as JSON: %w", err)
 	}
 	return map[string]interface{}{
 		"data": string(b),
 	}, nil
 }
 
-func RunWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev *domain.Event, repoCfg *config.Repo, workflows []*config.Workflow) (*domain.Response, error) {
+func RunWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev *domain.Event, repoCfg *config.Repo, workflows []*config.Workflow) error {
 	if len(workflows) == 0 {
 		logger.Info("no workflow is run")
-		return nil, nil //nolint:nilnil
+		return nil //nolint:nilnil
 	}
 
 	repo := ev.Payload.Repo
@@ -59,30 +53,18 @@ func RunWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev
 		// ref: PR merge branch refs/pull/:prNumber/merge
 		pr, err := waitPRMergeable(ctx, gh, pr, repoOwner, repoName)
 		if err != nil {
-			logger.Error(
-				"wait until pull request's mergeable becomes not nil",
-				zap.Error(err))
-			return &domain.Response{
-				StatusCode: http.StatusInternalServerError,
-				Body: map[string]interface{}{
-					"error": "Internal Server Error",
-				},
-			}, nil
+			return fmt.Errorf("wait until pull request's mergeable becomes not nil: %w", err)
 		}
 		if !pr.GetMergeable() {
-			return &domain.Response{
-				StatusCode: http.StatusBadRequest,
-				Body: map[string]interface{}{
-					"error": "pull_request isn't mergeable",
-				},
-			}, nil
+			logger.Warn("pull_request isn't mergeable")
+			return nil
 		}
 		ev.Payload.PullRequest = pr
 	}
 
-	inputs, resp := getWorkflowInput(logger, ev)
-	if resp != nil {
-		return resp, nil
+	inputs, err := getWorkflowInput(ev)
+	if err != nil {
+		return err
 	}
 
 	numWorkflows := len(workflows)
@@ -105,7 +87,7 @@ func RunWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev
 				zap.Error(err))
 		}
 	}
-	return nil, nil //nolint:nilnil
+	return nil
 }
 
 func waitPRMergeable(ctx context.Context, gh *github.Client, pr *github.PullRequest, repoOwner, repoName string) (*github.PullRequest, error) {

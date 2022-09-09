@@ -5,19 +5,18 @@ import (
 	"strings"
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
-	"github.com/gha-trigger/gha-trigger/pkg/domain"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"go.uber.org/zap"
 )
 
-func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, body interface{}) (*domain.Response, error) {
+func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, body interface{}) (bool, error) {
 	issueCommentEvent, ok := body.(*github.IssueCommentEvent)
 	if !ok {
-		return nil, nil //nolint:nilnil
+		return false, nil //nolint:nilnil
 	}
 	cmt := issueCommentEvent.GetComment()
 	if strings.Contains(cmt.GetHTMLURL(), "/issue/") {
-		return nil, nil //nolint:nilnil
+		return false, nil //nolint:nilnil
 	}
 
 	cmtBody := cmt.GetBody()
@@ -33,5 +32,5 @@ func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, body 
 	if strings.HasPrefix(cmtBody, "/cancel") {
 		return cancelWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, cmtBody)
 	}
-	return nil, nil //nolint:nilnil
+	return false, nil //nolint:nilnil
 }

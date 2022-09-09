@@ -66,7 +66,7 @@ func TestMatch(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			workflows, _, err := route.Match(ctx, tt.event, tt.repo)
+			workflows, err := route.Match(ctx, tt.event, tt.repo)
 			if err != nil {
 				if tt.wantErr {
 					return
