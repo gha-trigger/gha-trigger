@@ -6,6 +6,7 @@ import (
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
+	"github.com/gha-trigger/gha-trigger/pkg/github"
 	"github.com/gha-trigger/gha-trigger/pkg/githubapp"
 	"github.com/gha-trigger/gha-trigger/pkg/route"
 	"github.com/gha-trigger/gha-trigger/pkg/runworkflow"
@@ -14,12 +15,7 @@ import (
 )
 
 func (ctrl *Controller) Do(ctx context.Context, logger *zap.Logger, req *domain.Request) error {
-	// Normalize headers
-	headers := make(map[string]string, len(req.Params.Headers))
-	for k, v := range req.Params.Headers {
-		headers[strings.ToUpper(k)] = v
-	}
-	req.Params.Headers = headers
+	toUpperHeaders(req.Params)
 
 	ghApp, ev, err := ctrl.validate(logger, req)
 	if err != nil {
@@ -30,21 +26,31 @@ func (ctrl *Controller) Do(ctx context.Context, logger *zap.Logger, req *domain.
 	return ctrl.do(ctx, logger, ghApp, ev)
 }
 
+func toUpperHeaders(params *domain.RequestParamsField) {
+	// Normalize headers
+	headers := make(map[string]string, len(params.Headers))
+	for k, v := range params.Headers {
+		headers[strings.ToUpper(k)] = v
+	}
+	params.Headers = headers
+}
+
+func getRepoConfig(ghRepo *github.Repository, repos []*config.Repo) *config.Repo {
+	for _, repo := range repos {
+		if repo.RepoOwner == ghRepo.GetOwner().GetLogin() && repo.RepoName == ghRepo.GetName() {
+			return repo
+		}
+	}
+	return nil
+}
+
 func (ctrl *Controller) do(ctx context.Context, logger *zap.Logger, ghApp *githubapp.GitHubApp, ev *domain.Event) error {
 	if ev.Payload.Repo == nil {
 		logger.Info("event is ignored because a repository isn't found in the payload")
 		return nil
 	}
 
-	ghRepo := ev.Payload.Repo
-	var repoCfg *config.Repo
-	for _, repo := range ctrl.cfg.Repos {
-		if repo.RepoOwner != ghRepo.GetOwner().GetLogin() || repo.RepoName != ghRepo.GetName() {
-			continue
-		}
-		repoCfg = repo
-		break
-	}
+	repoCfg := getRepoConfig(ev.Payload.Repo, ctrl.cfg.Repos)
 	if repoCfg == nil {
 		logger.Error("repository config isn't found")
 		return nil
