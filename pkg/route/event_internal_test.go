@@ -92,7 +92,7 @@ func Test_matchEventType(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			f, _, err := matchEventType(ctx, tt.matchConfig, tt.event)
+			f, err := matchEventType(ctx, tt.matchConfig, tt.event)
 			if err != nil {
 				if tt.wantErr {
 					return

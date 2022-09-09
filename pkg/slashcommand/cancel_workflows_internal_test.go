@@ -8,23 +8,23 @@ import (
 	"go.uber.org/zap"
 )
 
-type workflowRerunner struct {
+type canceler struct {
 	resp *github.Response
 	err  error
 }
 
-func (c *workflowRerunner) RerunWorkflow(ctx context.Context, owner, repo string, runID int64) (*github.Response, error) {
+func (c *canceler) CancelWorkflow(ctx context.Context, owner, repo string, runID int64) (*github.Response, error) {
 	return c.resp, c.err
 }
 
-func Test_rerunWorkflows(t *testing.T) {
+func Test_cancelWorkflows(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name  string
 		owner string
 		repo  string
 		words []string
-		gh    WorkflowRerunner
+		gh    WorkflowCanceler
 	}{
 		{
 			name: "ids are required",
@@ -36,7 +36,7 @@ func Test_rerunWorkflows(t *testing.T) {
 		{
 			name:  "normal",
 			words: []string{"1", "2"},
-			gh:    &workflowRerunner{},
+			gh:    &canceler{},
 		},
 	}
 	ctx := context.Background()
@@ -45,7 +45,7 @@ func Test_rerunWorkflows(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			rerunWorkflows(ctx, logger, tt.gh, tt.owner, tt.repo, tt.words)
+			cancelWorkflows(ctx, logger, tt.gh, tt.owner, tt.repo, tt.words)
 		})
 	}
 }

@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"net/http"
 	"strings"
 
 	"github.com/gha-trigger/gha-trigger/pkg/config"
@@ -14,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (ctrl *Controller) Do(ctx context.Context, logger *zap.Logger, req *domain.Request) (*domain.Response, error) {
+func (ctrl *Controller) Do(ctx context.Context, logger *zap.Logger, req *domain.Request) error {
 	// Normalize headers
 	headers := make(map[string]string, len(req.Params.Headers))
 	for k, v := range req.Params.Headers {
@@ -22,27 +21,21 @@ func (ctrl *Controller) Do(ctx context.Context, logger *zap.Logger, req *domain.
 	}
 	req.Params.Headers = headers
 
-	ghApp, ev, resp := ctrl.validate(logger, req)
-
-	if resp != nil {
-		return resp, nil
+	ghApp, ev, err := ctrl.validate(logger, req)
+	if err != nil {
+		return err
 	}
 	logger = logger.With(zap.String("event_type", ev.Type))
 
 	return ctrl.do(ctx, logger, ghApp, ev)
 }
 
-func (ctrl *Controller) do(ctx context.Context, logger *zap.Logger, ghApp *githubapp.GitHubApp, ev *domain.Event) (*domain.Response, error) {
+func (ctrl *Controller) do(ctx context.Context, logger *zap.Logger, ghApp *githubapp.GitHubApp, ev *domain.Event) error {
 	body := ev.Body
 
 	if ev.Payload.Repo == nil {
 		logger.Info("event is ignored because a repository isn't found in the payload")
-		return &domain.Response{
-			StatusCode: http.StatusOK,
-			Body: map[string]interface{}{
-				"message": "event is ignored because a repository isn't found in the payload",
-			},
-		}, nil
+		return nil
 	}
 
 	ghRepo := ev.Payload.Repo
@@ -55,12 +48,8 @@ func (ctrl *Controller) do(ctx context.Context, logger *zap.Logger, ghApp *githu
 		break
 	}
 	if repoCfg == nil {
-		return &domain.Response{
-			StatusCode: http.StatusBadRequest,
-			Body: map[string]interface{}{
-				"message": "repository config isn't found",
-			},
-		}, nil
+		logger.Error("repository config isn't found")
+		return nil
 	}
 
 	logger = logger.With(
@@ -69,15 +58,15 @@ func (ctrl *Controller) do(ctx context.Context, logger *zap.Logger, ghApp *githu
 		zap.String("ci_repo_name", repoCfg.CIRepoName),
 	)
 
-	if resp, err := slashcommand.Handle(ctx, logger, repoCfg, body); resp != nil {
-		return resp, err
+	if slashcommand.Handle(ctx, logger, repoCfg, body) {
+		return nil
 	}
 
 	// route and filter request
 	// list labels and changed files
-	workflows, resp, err := route.Match(ctx, ev, repoCfg)
+	workflows, err := route.Match(ctx, ev, repoCfg)
 	if err != nil {
-		return resp, err
+		return err
 	}
 
 	return runworkflow.RunWorkflows(ctx, logger, ghApp.Client, ev, repoCfg, workflows)

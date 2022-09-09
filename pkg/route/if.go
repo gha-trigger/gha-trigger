@@ -7,7 +7,7 @@ import (
 	"github.com/gha-trigger/gha-trigger/pkg/domain"
 )
 
-func matchIf(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, *domain.Response, error) {
+func matchIf(ctx context.Context, matchConfig *config.Match, event *domain.Event) (bool, error) {
 	// TODO
-	return true, nil, nil
+	return true, nil
 }

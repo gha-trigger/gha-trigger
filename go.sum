@@ -246,6 +246,8 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
 github.com/suzuki-shunsuke/go-osenv v0.1.0 h1:hBQ7yaeO1WBZsEWuDj1wrOWF+N7HSWSOpEiEZqfCjjk=
 github.com/suzuki-shunsuke/go-osenv v0.1.0/go.mod h1:ZlSVi4kYvV51JEtYpdHh9hAxXKLOWExXel3Jo74aacQ=
+github.com/suzuki-shunsuke/zap-error v0.1.1 h1:QwWDPc+0fvijMkB7lD/EWv2pAARBOA2SpIFkyb6Zk54=
+github.com/suzuki-shunsuke/zap-error v0.1.1/go.mod h1:+pvUwpx+yH6ZPGFnygH4VgbOJxiIMeR8ouwJmbBYnmw=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
