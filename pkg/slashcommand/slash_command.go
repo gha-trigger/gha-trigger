@@ -10,7 +10,7 @@ import (
 )
 
 func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, ev *domain.Event) bool {
-	if ev.Type == "issue_comment" {
+	if ev.Type != "issue_comment" {
 		return false
 	}
 	cmt := ev.Payload.Comment
