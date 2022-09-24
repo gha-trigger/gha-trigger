@@ -8,6 +8,7 @@ import (
 	"github.com/gha-trigger/gha-trigger/pkg/aws"
 	"github.com/gha-trigger/gha-trigger/pkg/config"
 	"github.com/gha-trigger/gha-trigger/pkg/github"
+	"github.com/gha-trigger/gha-trigger/pkg/util"
 )
 
 type GitHubApp struct {
@@ -16,7 +17,11 @@ type GitHubApp struct {
 	Client        *github.Client
 }
 
-func New(ctx context.Context, awsClient *aws.Client, appCfg *config.GitHubApp) (*GitHubApp, error) {
+type AWSClient interface {
+	GetSecretValueWithContext(ctx aws.Context, input *aws.GetSecretValueInput, opts ...aws.Option) (*aws.GetSecretValueOutput, error)
+}
+
+func New(ctx context.Context, awsClient AWSClient, appCfg *config.GitHubApp) (*GitHubApp, error) {
 	paramNewApp := &github.ParamNewApp{
 		AppID:          appCfg.AppID,
 		InstallationID: appCfg.InstallationID,
@@ -24,10 +29,10 @@ func New(ctx context.Context, awsClient *aws.Client, appCfg *config.GitHubApp) (
 		User:           appCfg.User,
 	}
 	input := &aws.GetSecretValueInput{
-		SecretId: aws.String(appCfg.Secret.SecretID),
+		SecretId: util.StrP(appCfg.Secret.SecretID),
 	}
 	if appCfg.Secret.VersionID != "" {
-		input.VersionId = aws.String(appCfg.Secret.VersionID)
+		input.VersionId = util.StrP(appCfg.Secret.VersionID)
 	}
 	secretOutput, err := awsClient.GetSecretValueWithContext(ctx, input) //nolint:contextcheck
 	if err != nil {
