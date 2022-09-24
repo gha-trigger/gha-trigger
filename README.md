@@ -6,12 +6,6 @@
 
 Webhook Server for Secure GitHub Actions
 
-## Status
-
-:warning: **Under development. This doesn't work yet.** :warning:
-
-We aim to release v0.1.0 in September 2022.
-
 ## LICENSE
 
 [MIT](LICENSE)
