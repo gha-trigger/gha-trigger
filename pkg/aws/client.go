@@ -31,6 +31,7 @@ type (
 	GetSecretValueInput  = secretsmanager.GetSecretValueInput
 	GetSecretValueOutput = secretsmanager.GetSecretValueOutput
 	Option               = request.Option
+	Context              = aws.Context
 )
 
 func (cl *Client) GetSecretValueWithContext(ctx aws.Context, input *GetSecretValueInput, opts ...Option) (*GetSecretValueOutput, error) {
