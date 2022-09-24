@@ -40,13 +40,13 @@ tasks:
       GOOS=linux GOARCH={{.arch}} go build -o "$tempdir/bootstrap" ./cmd/gha-trigger-lambda
       pushd "$tempdir"
       zip "gha-trigger-lambda_linux_{{.arch}}.zip" bootstrap
-      mv "gha-trigger-lambda_linux_{{.arch}}.zip" "$wd/terraform"
+      mv "gha-trigger-lambda_linux_{{.arch}}.zip" "$wd"
       popd
       rm -R "$tempdir"
     args:
       - name: arch
         required: false
-        default: amd64
+        default: arm64
         validate:
           - enum:
               - amd64
