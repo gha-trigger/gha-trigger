@@ -33,10 +33,6 @@ type (
 	Option               = request.Option
 )
 
-func String(s string) *string {
-	return &s
-}
-
 func (cl *Client) GetSecretValueWithContext(ctx aws.Context, input *GetSecretValueInput, opts ...Option) (*GetSecretValueOutput, error) {
 	return cl.secretsManager.GetSecretValueWithContext(ctx, input, opts...)
 }
