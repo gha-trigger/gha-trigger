@@ -32,6 +32,7 @@ type (
 	RepositoryCommit                   = github.RepositoryCommit
 	Response                           = github.Response
 	StatusEvent                        = github.StatusEvent
+	User                               = github.User
 	V3Client                           = github.Client
 )
 

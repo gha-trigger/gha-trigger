@@ -11,3 +11,7 @@ func ParseInt64(s string) (int64, error) {
 func StrP(s string) *string {
 	return &s
 }
+
+func BoolP(b bool) *bool {
+	return &b
+}

@@ -38,7 +38,7 @@ func getWorkflowInput(ev *domain.Event) (map[string]interface{}, error) {
 	}, nil
 }
 
-func RunWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev *domain.Event, repoCfg *config.Repo, workflows []*config.Workflow) error {
+func RunWorkflows(ctx context.Context, logger *zap.Logger, gh GitHubPRClient, ev *domain.Event, repoCfg *config.Repo, workflows []*config.Workflow) error {
 	if len(workflows) == 0 {
 		logger.Info("no workflow is run")
 		return nil //nolint:nilnil
@@ -90,7 +90,11 @@ func RunWorkflows(ctx context.Context, logger *zap.Logger, gh *github.Client, ev
 	return nil
 }
 
-func waitPRMergeable(ctx context.Context, gh *github.Client, pr *github.PullRequest, repoOwner, repoName string) (*github.PullRequest, error) {
+type GitHubPRClient interface {
+	GetPR(ctx context.Context, owner, repo string, number int) (*github.PullRequest, *github.Response, error)
+}
+
+func waitPRMergeable(ctx context.Context, gh GitHubPRClient, pr *github.PullRequest, repoOwner, repoName string) (*github.PullRequest, error) {
 	for i := 0; i < 10; i++ {
 		if m := pr.Mergeable; m != nil {
 			return pr, nil
