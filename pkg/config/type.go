@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"path"
 	"regexp"
@@ -131,7 +132,11 @@ type Match struct {
 type Workflow struct {
 	WorkflowFileName string `yaml:"workflow_file_name" validate:"required"`
 	Ref              string
-	GitHub           *github.Client `yaml:"-"`
+	GitHub           GitHubWorkflowClient `yaml:"-"`
+}
+
+type GitHubWorkflowClient interface {
+	RunWorkflow(ctx context.Context, owner, repo, workflowFileName string, event github.CreateWorkflowDispatchEventRequest) (*github.Response, error)
 }
 
 func compileStringsByRegexp(arr []*StringMatch) error {
