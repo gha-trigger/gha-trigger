@@ -30,6 +30,9 @@ func Handle(ctx context.Context, logger *zap.Logger, repoCfg *config.Repo, ev *d
 	case "/cancel":
 		cancelWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words[1:])
 		return true
+	case "/rerun-job":
+		cancelWorkflows(ctx, logger, repoCfg.GitHub, repoCfg.RepoOwner, repoCfg.CIRepoName, words[1:])
+		return true
 	}
 	return false
 }
