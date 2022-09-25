@@ -7,7 +7,11 @@ import (
 	"go.uber.org/zap"
 )
 
-func rerunJobs(ctx context.Context, logger *zap.Logger, gh *github.Client, owner, repo string, words []string) {
+type JobRerunner interface {
+	RerunJob(ctx context.Context, owner, repo string, jobID int64) (*github.Response, error)
+}
+
+func rerunJobs(ctx context.Context, logger *zap.Logger, gh JobRerunner, owner, repo string, words []string) {
 	// /rerun-job <job id> [<job id> ...]
 	if len(words) == 0 { //nolint:gomnd
 		// TODO send notification to issue or pr
