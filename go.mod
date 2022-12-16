@@ -1,6 +1,6 @@
 module github.com/gha-trigger/gha-trigger
 
-go 1.18
+go 1.19
 
 require (
 	cloud.google.com/go/secretmanager v1.9.0
