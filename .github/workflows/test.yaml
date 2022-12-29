@@ -26,7 +26,7 @@ jobs:
 
       - uses: aquaproj/aqua-installer@v2.0.2
         with:
-          aqua_version: v1.26.2
+          aqua_version: v1.27.0
 
       - run: golangci-lint run
       - name: Test
