@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # v3
         with:
           go-version: "1.18.5"
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@b508e2e3ef3b19d4e4146d4f8fb3ba9db644a757 # v3
         with:
           version: latest
           args: release --rm-dist
