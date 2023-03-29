@@ -5,7 +5,7 @@ go 1.18
 require (
 	cloud.google.com/go/secretmanager v1.10.0
 	github.com/aws/aws-lambda-go v1.39.1
-	github.com/aws/aws-sdk-go v1.44.231
+	github.com/aws/aws-sdk-go v1.44.232
 	github.com/bradleyfalzon/ghinstallation/v2 v2.2.0
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/google/go-cmp v0.5.9
