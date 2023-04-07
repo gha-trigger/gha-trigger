@@ -5,4 +5,4 @@ registries:
     ref: v3.150.0 # renovate: depName=aquaproj/aqua-registry
 packages:
   - import: aqua/*.yaml
-  - name: suzuki-shunsuke/cmdx@v1.7.0
+  - name: suzuki-shunsuke/cmdx@v1.7.1
