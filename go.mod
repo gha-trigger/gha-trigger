@@ -10,6 +10,7 @@ require (
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v47 v47.1.0
+	github.com/google/go-github/v51 v51.0.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
 	github.com/suzuki-shunsuke/zap-error v0.1.1
 	go.uber.org/zap v1.24.0
