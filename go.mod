@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/secretmanager v1.10.0
 	github.com/aws/aws-lambda-go v1.40.0
 	github.com/aws/aws-sdk-go v1.44.249
-	github.com/bradleyfalzon/ghinstallation/v2 v2.3.0
+	github.com/bradleyfalzon/ghinstallation/v2 v2.4.0
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v47 v47.1.0
@@ -28,6 +28,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-github/v50 v50.2.0 // indirect
+	github.com/google/go-github/v52 v52.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
@@ -38,10 +39,10 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/oauth2 v0.6.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/oauth2 v0.7.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	google.golang.org/api v0.103.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20221201164419-0e50fba7f41c // indirect
