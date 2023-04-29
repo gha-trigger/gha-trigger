@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-lambda-go v1.40.0
 	github.com/aws/aws-sdk-go v1.44.253
 	github.com/bradleyfalzon/ghinstallation/v2 v2.4.0
-	github.com/go-playground/validator/v10 v10.12.0
+	github.com/go-playground/validator/v10 v10.13.0
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v47 v47.1.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
@@ -34,7 +34,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/leodido/go-urn v1.2.2 // indirect
+	github.com/leodido/go-urn v1.2.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
