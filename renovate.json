@@ -2,8 +2,8 @@
   "extends": [
     "config:base",
     "github>suzuki-shunsuke/renovate-config",
-    "github>aquaproj/aqua-renovate-config#1.5.2",
-    "github>aquaproj/aqua-renovate-config:file#1.5.2(aqua/.+\\.yaml)"
+    "github>aquaproj/aqua-renovate-config#1.6.0",
+    "github>aquaproj/aqua-renovate-config:file#1.6.0(aqua/.+\\.yaml)"
   ],
   "packageRules": [
     {
