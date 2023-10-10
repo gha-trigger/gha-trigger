@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.45.24
 	github.com/bradleyfalzon/ghinstallation/v2 v2.7.0
 	github.com/go-playground/validator/v10 v10.15.5
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v52 v52.0.0
 	github.com/suzuki-shunsuke/go-osenv v0.1.0
 	github.com/suzuki-shunsuke/zap-error v0.1.1
