@@ -3,7 +3,7 @@ package github
 import (
 	"net/http"
 
-	"github.com/google/go-github/v52/github"
+	"github.com/google/go-github/v56/github"
 )
 
 const (
