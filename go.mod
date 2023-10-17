@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/secretmanager v1.11.2
 	github.com/aws/aws-lambda-go v1.41.0
 	github.com/aws/aws-sdk-go v1.45.26
-	github.com/bradleyfalzon/ghinstallation/v2 v2.7.0
+	github.com/bradleyfalzon/ghinstallation/v2 v2.8.0
 	github.com/go-playground/validator/v10 v10.15.5
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-github/v52 v52.0.0
@@ -30,6 +30,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-github/v53 v53.2.0 // indirect
 	github.com/google/go-github/v55 v55.0.0 // indirect
+	github.com/google/go-github/v56 v56.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.4 // indirect
