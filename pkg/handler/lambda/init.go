@@ -13,7 +13,7 @@ import (
 	"github.com/gha-trigger/gha-trigger/pkg/githubapp"
 	"github.com/suzuki-shunsuke/go-osenv/osenv"
 	"go.uber.org/zap"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type Handler struct {
