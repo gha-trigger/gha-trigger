@@ -6,6 +6,10 @@
 
 Webhook Server for Secure GitHub Actions
 
+## :warning: Deprecated. Please use `pull_request_target` instead
+
+[Secure GitHub Actions by pull_request_target](https://dev.to/suzukishunsuke/secure-github-actions-by-pullrequesttarget-641)
+
 ## LICENSE
 
 [MIT](LICENSE)
